@@ -1,0 +1,11 @@
+target/
+logs/
+*.log
+*.json
+
+.vscode/
+.idea/
+
+*.class
+.DS_Store
+Thumbs.db   

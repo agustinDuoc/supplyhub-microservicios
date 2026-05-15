@@ -1,48 +1,68 @@
 package com.supplyhub.ms_ordenes_compra.service;
 
+
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
-import com.supplyhub.ms_ordenes_compra.dto.*;
+import com.supplyhub.ms_ordenes_compra.client.ClienteClient;
+import com.supplyhub.ms_ordenes_compra.client.InventarioClient;
+import com.supplyhub.ms_ordenes_compra.dto.ClienteDTO;
+import com.supplyhub.ms_ordenes_compra.dto.InventarioDTO;
+import com.supplyhub.ms_ordenes_compra.dto.OrdenCompraRequestDTO;
+import com.supplyhub.ms_ordenes_compra.dto.OrdenCompraResponseDTO;
 import com.supplyhub.ms_ordenes_compra.exception.RecursoNoEncontradoException;
 import com.supplyhub.ms_ordenes_compra.model.OrdenCompra;
 import com.supplyhub.ms_ordenes_compra.repository.OrdenCompraRepository;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class OrdenCompraService {
 
     private final OrdenCompraRepository repository;
-    private final WebClient webClient;
+    private final ClienteClient clienteClient;
+    private final InventarioClient inventarioClient;
 
-    public OrdenCompraService(OrdenCompraRepository repository, WebClient.Builder builder) {
-        this.repository = repository;
-        this.webClient = builder.build();
+    public List<OrdenCompraResponseDTO> listar(String token) {
+
+        List<OrdenCompra> ordenes = repository.findAll();
+        List<OrdenCompraResponseDTO> respuesta = new ArrayList<>();
+
+        for (OrdenCompra orden : ordenes) {
+            respuesta.add(convertir(orden, token));
+        }
+
+        return respuesta;
     }
 
-    public List<OrdenCompraResponseDTO> listar() {
-        return repository.findAll()
-                .stream()
-                .map(this::convertir)
-                .toList();
-    }
+    public OrdenCompraResponseDTO buscarPorId(Long id, String token) {
 
-    public OrdenCompraResponseDTO buscarPorId(Long id) {
         OrdenCompra orden = repository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Orden de compra no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Orden de compra no encontrada con id: " + id
+                ));
 
-        return convertir(orden);
+        return convertir(orden, token);
     }
 
-    public OrdenCompraResponseDTO guardar(OrdenCompraRequestDTO dto) {
-        ClienteDTO cliente = obtenerCliente(dto.getIdCliente());
-        InventarioDTO inventario = obtenerInventario(dto.getIdInventario());
+    public OrdenCompraResponseDTO guardar(OrdenCompraRequestDTO dto, String token) {
+
+        ClienteDTO cliente = clienteClient.obtenerCliente(dto.getIdCliente(), token);
+        InventarioDTO inventario = inventarioClient.obtenerInventario(dto.getIdInventario(), token);
+
+        if (cliente == null) {
+            throw new RecursoNoEncontradoException("Cliente no encontrado con id: " + dto.getIdCliente());
+        }
+
+        if (inventario == null) {
+            throw new RecursoNoEncontradoException("Inventario no encontrado con id: " + dto.getIdInventario());
+        }
 
         if (inventario.getStockDisponible() < dto.getCantidad()) {
             throw new RuntimeException("Stock insuficiente para generar la orden");
@@ -60,15 +80,26 @@ public class OrdenCompraService {
 
         log.info("Orden de compra creada con id {}", guardada.getId());
 
-        return convertir(guardada);
+        return convertir(guardada, token);
     }
 
-    public OrdenCompraResponseDTO actualizar(Long id, OrdenCompraRequestDTO dto) {
-        OrdenCompra orden = repository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Orden de compra no encontrada con id: " + id));
+    public OrdenCompraResponseDTO actualizar(Long id, OrdenCompraRequestDTO dto, String token) {
 
-        ClienteDTO cliente = obtenerCliente(dto.getIdCliente());
-        InventarioDTO inventario = obtenerInventario(dto.getIdInventario());
+        OrdenCompra orden = repository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Orden de compra no encontrada con id: " + id
+                ));
+
+        ClienteDTO cliente = clienteClient.obtenerCliente(dto.getIdCliente(), token);
+        InventarioDTO inventario = inventarioClient.obtenerInventario(dto.getIdInventario(), token);
+
+        if (cliente == null) {
+            throw new RecursoNoEncontradoException("Cliente no encontrado con id: " + dto.getIdCliente());
+        }
+
+        if (inventario == null) {
+            throw new RecursoNoEncontradoException("Inventario no encontrado con id: " + dto.getIdInventario());
+        }
 
         if (inventario.getStockDisponible() < dto.getCantidad()) {
             throw new RuntimeException("Stock insuficiente para actualizar la orden");
@@ -80,19 +111,29 @@ public class OrdenCompraService {
         orden.setTotal(dto.getTotal());
         orden.setEstado(dto.getEstado());
 
-        return convertir(repository.save(orden));
+        OrdenCompra actualizada = repository.save(orden);
+
+        log.info("Orden de compra actualizada con id {}", actualizada.getId());
+
+        return convertir(actualizada, token);
     }
 
     public void eliminar(Long id) {
+
         OrdenCompra orden = repository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Orden de compra no encontrada con id: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Orden de compra no encontrada con id: " + id
+                ));
 
         repository.delete(orden);
+
+        log.info("Orden de compra eliminada con id {}", id);
     }
 
-    private OrdenCompraResponseDTO convertir(OrdenCompra orden) {
-        ClienteDTO cliente = obtenerCliente(orden.getIdCliente());
-        InventarioDTO inventario = obtenerInventario(orden.getIdInventario());
+    private OrdenCompraResponseDTO convertir(OrdenCompra orden, String token) {
+
+        ClienteDTO cliente = clienteClient.obtenerCliente(orden.getIdCliente(), token);
+        InventarioDTO inventario = inventarioClient.obtenerInventario(orden.getIdInventario(), token);
 
         return OrdenCompraResponseDTO.builder()
                 .id(orden.getId())
@@ -103,37 +144,5 @@ public class OrdenCompraService {
                 .estado(orden.getEstado())
                 .fechaOrden(orden.getFechaOrden())
                 .build();
-    }
-
-    private ClienteDTO obtenerCliente(Long idCliente) {
-        try {
-            ExternalApiResponse<ClienteDTO> response = webClient.get()
-                    .uri("http://localhost:8081/api/v1/clientes/" + idCliente)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ExternalApiResponse<ClienteDTO>>() {})
-                    .block();
-
-            return response.getData();
-
-        } catch (Exception e) {
-            log.warn("No se pudo obtener cliente id {}", idCliente);
-            throw new RecursoNoEncontradoException("Cliente no encontrado con id: " + idCliente);
-        }
-    }
-
-    private InventarioDTO obtenerInventario(Long idInventario) {
-        try {
-            ExternalApiResponse<InventarioDTO> response = webClient.get()
-                    .uri("http://localhost:8086/api/v1/inventario/" + idInventario)
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ExternalApiResponse<InventarioDTO>>() {})
-                    .block();
-
-            return response.getData();
-
-        } catch (Exception e) {
-            log.warn("No se pudo obtener inventario id {}", idInventario);
-            throw new RecursoNoEncontradoException("Inventario no encontrado con id: " + idInventario);
-        }
     }
 }

@@ -24,38 +24,46 @@ public class OrdenCompraController {
     private final OrdenCompraService service;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<OrdenCompraResponseDTO>>> listar() {
+    public ResponseEntity<ApiResponse<List<OrdenCompraResponseDTO>>> listar(
+            @RequestHeader("Authorization") String token) {
+
         log.info("GET /api/v1/ordenes-compra - Listando órdenes de compra");
 
         return ResponseEntity.ok(
                 ApiResponse.<List<OrdenCompraResponseDTO>>builder()
                         .success(true)
                         .message("Órdenes de compra encontradas")
-                        .data(service.listar())
+                        .data(service.listar(token))
                         .error(null)
                         .build()
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<OrdenCompraResponseDTO>> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<OrdenCompraResponseDTO>> buscarPorId(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String token) {
+
         log.info("GET /api/v1/ordenes-compra/{} - Buscando orden de compra", id);
 
         return ResponseEntity.ok(
                 ApiResponse.<OrdenCompraResponseDTO>builder()
                         .success(true)
                         .message("Orden de compra encontrada")
-                        .data(service.buscarPorId(id))
+                        .data(service.buscarPorId(id, token))
                         .error(null)
                         .build()
         );
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<OrdenCompraResponseDTO>> guardar(@Valid @RequestBody OrdenCompraRequestDTO dto) {
+    public ResponseEntity<ApiResponse<OrdenCompraResponseDTO>> guardar(
+            @Valid @RequestBody OrdenCompraRequestDTO dto,
+            @RequestHeader("Authorization") String token) {
+
         log.info("POST /api/v1/ordenes-compra - Creando orden para cliente {}", dto.getIdCliente());
 
-        OrdenCompraResponseDTO orden = service.guardar(dto);
+        OrdenCompraResponseDTO orden = service.guardar(dto, token);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<OrdenCompraResponseDTO>builder()
@@ -70,7 +78,8 @@ public class OrdenCompraController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<OrdenCompraResponseDTO>> actualizar(
             @PathVariable Long id,
-            @Valid @RequestBody OrdenCompraRequestDTO dto) {
+            @Valid @RequestBody OrdenCompraRequestDTO dto,
+            @RequestHeader("Authorization") String token) {
 
         log.info("PUT /api/v1/ordenes-compra/{} - Actualizando orden de compra", id);
 
@@ -78,7 +87,7 @@ public class OrdenCompraController {
                 ApiResponse.<OrdenCompraResponseDTO>builder()
                         .success(true)
                         .message("Orden de compra actualizada correctamente")
-                        .data(service.actualizar(id, dto))
+                        .data(service.actualizar(id, dto, token))
                         .error(null)
                         .build()
         );
@@ -86,6 +95,7 @@ public class OrdenCompraController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+
         log.warn("DELETE /api/v1/ordenes-compra/{} - Eliminando orden de compra", id);
 
         service.eliminar(id);

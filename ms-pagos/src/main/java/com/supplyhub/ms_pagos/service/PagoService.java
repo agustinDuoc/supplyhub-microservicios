@@ -26,22 +26,22 @@ public class PagoService {
         this.webClient = builder.build();
     }
 
-    public List<PagoResponseDTO> listar() {
+    public List<PagoResponseDTO> listar(String token) {
         return repository.findAll()
                 .stream()
-                .map(this::convertir)
+                .map(pago -> convertir(pago, token))
                 .toList();
     }
 
-    public PagoResponseDTO buscarPorId(Long id) {
+    public PagoResponseDTO buscarPorId(Long id, String token) {
         Pago pago = repository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pago no encontrado con id: " + id));
 
-        return convertir(pago);
+        return convertir(pago, token);
     }
 
-    public PagoResponseDTO guardar(PagoRequestDTO dto) {
-        OrdenCompraDTO orden = obtenerOrdenCompra(dto.getIdOrdenCompra());
+    public PagoResponseDTO guardar(PagoRequestDTO dto, String token) {
+        OrdenCompraDTO orden = obtenerOrdenCompra(dto.getIdOrdenCompra(), token);
 
         Pago pago = new Pago();
         pago.setIdOrdenCompra(orden.getId());
@@ -54,21 +54,21 @@ public class PagoService {
 
         log.info("Pago creado con id {}", guardado.getId());
 
-        return convertir(guardado);
+        return convertir(guardado, token);
     }
 
-    public PagoResponseDTO actualizar(Long id, PagoRequestDTO dto) {
+    public PagoResponseDTO actualizar(Long id, PagoRequestDTO dto, String token) {
         Pago pago = repository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pago no encontrado con id: " + id));
 
-        OrdenCompraDTO orden = obtenerOrdenCompra(dto.getIdOrdenCompra());
+        OrdenCompraDTO orden = obtenerOrdenCompra(dto.getIdOrdenCompra(), token);
 
         pago.setIdOrdenCompra(orden.getId());
         pago.setMonto(dto.getMonto());
         pago.setMetodoPago(dto.getMetodoPago());
         pago.setEstadoPago(dto.getEstadoPago());
 
-        return convertir(repository.save(pago));
+        return convertir(repository.save(pago), token);
     }
 
     public void eliminar(Long id) {
@@ -78,8 +78,8 @@ public class PagoService {
         repository.delete(pago);
     }
 
-    private PagoResponseDTO convertir(Pago pago) {
-        OrdenCompraDTO orden = obtenerOrdenCompra(pago.getIdOrdenCompra());
+    private PagoResponseDTO convertir(Pago pago, String token) {
+        OrdenCompraDTO orden = obtenerOrdenCompra(pago.getIdOrdenCompra(), token);
 
         return PagoResponseDTO.builder()
                 .id(pago.getId())
@@ -91,10 +91,11 @@ public class PagoService {
                 .build();
     }
 
-    private OrdenCompraDTO obtenerOrdenCompra(Long idOrdenCompra) {
+    private OrdenCompraDTO obtenerOrdenCompra(Long idOrdenCompra, String token) {
         try {
             ExternalApiResponse<OrdenCompraDTO> response = webClient.get()
-                    .uri("http://localhost:8088/api/v1/ordenes-compra/" + idOrdenCompra)
+                    .uri("http://localhost:8092/api/v1/ordenes-compra/" + idOrdenCompra)
+                    .header("Authorization", token)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ExternalApiResponse<OrdenCompraDTO>>() {})
                     .block();

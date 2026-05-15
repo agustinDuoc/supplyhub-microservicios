@@ -22,38 +22,38 @@ public class PagoController {
     private final PagoService service;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PagoResponseDTO>>> listar() {
+    public ResponseEntity<ApiResponse<List<PagoResponseDTO>>> listar(@RequestHeader(value = "Authorization", required = false) String token) {
         log.info("GET /api/v1/pagos - Listando pagos");
 
         return ResponseEntity.ok(
                 ApiResponse.<List<PagoResponseDTO>>builder()
                         .success(true)
                         .message("Pagos encontrados")
-                        .data(service.listar())
+                        .data(service.listar(token))
                         .error(null)
                         .build()
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PagoResponseDTO>> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<PagoResponseDTO>> buscarPorId(@PathVariable Long id, @RequestHeader(value = "Authorization", required = false) String token) {
         log.info("GET /api/v1/pagos/{} - Buscando pago", id);
 
         return ResponseEntity.ok(
                 ApiResponse.<PagoResponseDTO>builder()
                         .success(true)
                         .message("Pago encontrado")
-                        .data(service.buscarPorId(id))
+                        .data(service.buscarPorId(id, token))
                         .error(null)
                         .build()
         );
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<PagoResponseDTO>> guardar(@Valid @RequestBody PagoRequestDTO dto) {
+    public ResponseEntity<ApiResponse<PagoResponseDTO>> guardar(@Valid @RequestBody PagoRequestDTO dto, @RequestHeader(value = "Authorization", required = false) String token) {
         log.info("POST /api/v1/pagos - Creando pago para orden {}", dto.getIdOrdenCompra());
 
-        PagoResponseDTO pago = service.guardar(dto);
+        PagoResponseDTO pago = service.guardar(dto, token);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<PagoResponseDTO>builder()
@@ -68,7 +68,8 @@ public class PagoController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PagoResponseDTO>> actualizar(
             @PathVariable Long id,
-            @Valid @RequestBody PagoRequestDTO dto) {
+            @Valid @RequestBody PagoRequestDTO dto,
+            @RequestHeader(value = "Authorization", required = false) String token) {
 
         log.info("PUT /api/v1/pagos/{} - Actualizando pago", id);
 
@@ -76,7 +77,7 @@ public class PagoController {
                 ApiResponse.<PagoResponseDTO>builder()
                         .success(true)
                         .message("Pago actualizado correctamente")
-                        .data(service.actualizar(id, dto))
+                        .data(service.actualizar(id, dto, token))
                         .error(null)
                         .build()
         );

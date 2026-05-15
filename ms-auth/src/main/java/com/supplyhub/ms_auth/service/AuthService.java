@@ -37,14 +37,13 @@ public class AuthService {
         Usuario user = new Usuario();
         user.setUsername(req.getUsername());
         user.setPassword(encoder.encode(req.getPassword()));
-        user.setRole("ROLE_USER");
+        user.setRole(normalizarRol(req.getRole()));
 
         usuarioRepo.save(user);
 
         String access = jwtUtil.generarToken(user.getUsername(), user.getRole());
-        String refresh = generarRefreshToken(user.getUsername());
 
-        log.info("Usuario registrado: {}", user.getUsername());
+        String refresh = generarRefreshToken(user.getUsername());
 
         return new AuthResponse(access, refresh);
     }
@@ -52,13 +51,19 @@ public class AuthService {
     public AuthResponse login(LoginRequest req) {
 
         authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getUsername(), req.getPassword())
+                new UsernamePasswordAuthenticationToken(
+                        req.getUsername(),
+                        req.getPassword())
         );
 
         Usuario user = usuarioRepo.findByUsername(req.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        String access = jwtUtil.generarToken(user.getUsername(), user.getRole());
+        String access = jwtUtil.generarToken(
+                user.getUsername(),
+                user.getRole()
+        );
+
         String refresh = generarRefreshToken(user.getUsername());
 
         log.info("Login exitoso: {}", user.getUsername());
@@ -71,16 +76,32 @@ public class AuthService {
         RefreshToken token = refreshRepo.findByToken(refreshToken)
                 .orElseThrow(() -> new RuntimeException("Refresh inválido"));
 
-        if (!jwtUtil.esValido(refreshToken) || !jwtUtil.esRefreshToken(refreshToken)) {
+        if (!jwtUtil.esValido(refreshToken)
+                || !jwtUtil.esRefreshToken(refreshToken)) {
+
             throw new RuntimeException("Refresh token inválido");
         }
 
         Usuario user = usuarioRepo.findByUsername(token.getUsername())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        String newAccess = jwtUtil.generarToken(user.getUsername(), user.getRole());
+        String newAccess = jwtUtil.generarToken(
+                user.getUsername(),
+                user.getRole()
+        );
 
         return new AuthResponse(newAccess, refreshToken);
+    }
+
+    private String normalizarRol(String role) {
+        if (role == null || role.isBlank()) {
+            return "CLIENTE";
+        }
+        String limpio = role.trim().toUpperCase();
+        if (limpio.startsWith("ROLE_")) {
+            limpio = limpio.substring(5);
+        }
+        return limpio;
     }
 
     private String generarRefreshToken(String username) {
@@ -88,9 +109,12 @@ public class AuthService {
         String token = jwtUtil.generarRefreshTokenJwt(username);
 
         RefreshToken rt = new RefreshToken();
+
         rt.setToken(token);
         rt.setUsername(username);
-        rt.setExpiryDate(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24));
+        rt.setExpiryDate(
+                new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24)
+        );
 
         refreshRepo.save(rt);
 

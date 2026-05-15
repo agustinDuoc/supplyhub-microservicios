@@ -1,73 +1,75 @@
 package com.supplyhub.ms_auth.security;
 
 
-import java.security.Key;
-import java.util.Date;
-
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 @Component
 public class JwtUtil {
 
-    private final Key key;
+    @Value("${jwt.secret}")
+    private String secret;
 
-    private final long EXPIRATION_MS = 1000 * 60 * 60;
-    private final long REFRESH_EXPIRATION_MS = 1000 * 60 * 60 * 24;
 
-    public JwtUtil(@Value("${jwt.secret}") String secret) {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    private SecretKey getKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generarToken(String username, String role) {
+
         return Jwts.builder()
-                .setSubject(username)
-                .claim("role", role)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .subject(username)
+                .claim("role", "ROLE_" + role)
+                .claim("type", "access")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 86400000))
+                .signWith(getKey())
                 .compact();
     }
 
     public String generarRefreshTokenJwt(String username) {
         return Jwts.builder()
-                .setSubject(username)
+                .subject(username)
                 .claim("type", "refresh")
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + REFRESH_EXPIRATION_MS))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 604800000))
+                .signWith(getKey())
                 .compact();
     }
 
     public boolean esValido(String token) {
         try {
-            Claims claims = getClaims(token);
-            return !claims.getExpiration().before(new Date());
+            obtenerClaims(token);
+            return true;
         } catch (Exception e) {
             return false;
         }
     }
 
     public boolean esRefreshToken(String token) {
-        return "refresh".equals(getClaims(token).get("type"));
+        return "refresh".equals(obtenerClaims(token).get("type", String.class));
     }
 
     public String obtenerUsuario(String token) {
-        return getClaims(token).getSubject();
+        return obtenerClaims(token).getSubject();
     }
 
     public String obtenerRole(String token) {
-        return getClaims(token).get("role", String.class);
+        return obtenerClaims(token).get("role", String.class);
     }
 
-    private Claims getClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
+    private Claims obtenerClaims(String token) {
+        return Jwts.parser()
+                .verifyWith(getKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

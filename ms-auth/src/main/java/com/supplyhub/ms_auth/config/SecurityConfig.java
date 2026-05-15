@@ -1,6 +1,5 @@
 package com.supplyhub.ms_auth.config;
 
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,8 +19,8 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
-                .anyRequest().authenticated()
+                    .requestMatchers("/auth/**").permitAll()
+                    .anyRequest().authenticated()
             );
 
         return http.build();

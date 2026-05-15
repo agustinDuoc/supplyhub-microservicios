@@ -11,9 +11,9 @@
     </parent>
 
     <groupId>com.supplyhub</groupId>
-    <artifactId>ms-cotizaciones</artifactId>
+    <artifactId>ms-despachos</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ms-cotizaciones</name>
+    <name>ms-despachos</name>
     <description>Microservicio SupplyHub</description>
 
     <properties>

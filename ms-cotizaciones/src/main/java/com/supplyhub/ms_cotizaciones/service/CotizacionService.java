@@ -25,79 +25,61 @@ public class CotizacionService {
         this.webClient = builder.build();
     }
 
-    public List<CotizacionResponseDTO> listar() {
-        return repository.findAll()
-                .stream()
-                .map(this::convertir)
-                .toList();
+    public List<CotizacionResponseDTO> listar(String token) {
+        return repository.findAll().stream().map(c -> convertir(c, token)).toList();
     }
 
-    public CotizacionResponseDTO buscarPorId(Long id) {
+    public CotizacionResponseDTO buscarPorId(Long id, String token) {
         Cotizacion cotizacion = repository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cotización no encontrada con id: " + id));
-
-        return convertir(cotizacion);
+        return convertir(cotizacion, token);
     }
 
-    public CotizacionResponseDTO guardar(CotizacionRequestDTO dto) {
-        ProductoDTO producto = obtenerProducto(dto.getIdProducto());
-
+    public CotizacionResponseDTO guardar(CotizacionRequestDTO dto, String token) {
+        ProductoDTO producto = obtenerProducto(dto.getIdProducto(), token);
         Cotizacion cotizacion = new Cotizacion();
         cotizacion.setIdProducto(producto.getId());
         cotizacion.setCantidad(dto.getCantidad());
         cotizacion.setTotal(dto.getTotal());
         cotizacion.setEstado(dto.getEstado());
-
-        Cotizacion guardada = repository.save(cotizacion);
-
-        log.info("Cotización creada con id {}", guardada.getId());
-
-        return convertir(guardada);
+        return convertir(repository.save(cotizacion), token);
     }
 
-    public CotizacionResponseDTO actualizar(Long id, CotizacionRequestDTO dto) {
+    public CotizacionResponseDTO actualizar(Long id, CotizacionRequestDTO dto, String token) {
         Cotizacion cotizacion = repository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cotización no encontrada con id: " + id));
-
-        ProductoDTO producto = obtenerProducto(dto.getIdProducto());
-
+        ProductoDTO producto = obtenerProducto(dto.getIdProducto(), token);
         cotizacion.setIdProducto(producto.getId());
         cotizacion.setCantidad(dto.getCantidad());
         cotizacion.setTotal(dto.getTotal());
         cotizacion.setEstado(dto.getEstado());
-
-        return convertir(repository.save(cotizacion));
+        return convertir(repository.save(cotizacion), token);
     }
 
     public void eliminar(Long id) {
         Cotizacion cotizacion = repository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Cotización no encontrada con id: " + id));
-
         repository.delete(cotizacion);
     }
 
-    private CotizacionResponseDTO convertir(Cotizacion cotizacion) {
-        ProductoDTO producto = obtenerProducto(cotizacion.getIdProducto());
-
+    private CotizacionResponseDTO convertir(Cotizacion cotizacion, String token) {
+        ProductoDTO producto = obtenerProducto(cotizacion.getIdProducto(), token);
         return CotizacionResponseDTO.builder()
-                .id(cotizacion.getId())
-                .producto(producto)
-                .cantidad(cotizacion.getCantidad())
-                .total(cotizacion.getTotal())
-                .estado(cotizacion.getEstado())
-                .build();
+                .id(cotizacion.getId()).producto(producto).cantidad(cotizacion.getCantidad())
+                .total(cotizacion.getTotal()).estado(cotizacion.getEstado()).build();
     }
 
-    private ProductoDTO obtenerProducto(Long idProducto) {
+    private ProductoDTO obtenerProducto(Long idProducto, String token) {
         try {
-            ExternalApiResponse<ProductoDTO> response = webClient.get()
-                    .uri("http://localhost:8085/api/v1/productos/" + idProducto)
-                    .retrieve()
+            WebClient.RequestHeadersSpec<?> spec = webClient.get()
+                    .uri("http://localhost:8089/api/v1/productos/" + idProducto);
+            if (token != null && !token.isBlank()) {
+                spec = spec.header("Authorization", token);
+            }
+            ExternalApiResponse<ProductoDTO> response = spec.retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ExternalApiResponse<ProductoDTO>>() {})
                     .block();
-
-            return response.getData();
-
+            return response != null ? response.getData() : null;
         } catch (Exception e) {
             log.warn("No se pudo obtener producto id {}", idProducto);
             throw new RecursoNoEncontradoException("Producto no encontrado con id: " + idProducto);

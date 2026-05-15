@@ -24,38 +24,40 @@ public class ProductoController {
     private final ProductoService service;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<ProductoResponseDTO>>> listar() {
+    public ResponseEntity<ApiResponse<List<ProductoResponseDTO>>> listar(@RequestHeader("Authorization") String token) {
         log.info("GET /api/v1/productos - Listando productos");
 
         return ResponseEntity.ok(
                 ApiResponse.<List<ProductoResponseDTO>>builder()
                         .success(true)
                         .message("Productos encontrados")
-                        .data(service.listar())
+                        .data(service.listar(token))
                         .error(null)
                         .build()
         );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductoResponseDTO>> buscarPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ProductoResponseDTO>> buscarPorId(@PathVariable Long id,
+                                                                        @RequestHeader("Authorization") String token) {
         log.info("GET /api/v1/productos/{} - Buscando producto", id);
 
         return ResponseEntity.ok(
                 ApiResponse.<ProductoResponseDTO>builder()
                         .success(true)
                         .message("Producto encontrado")
-                        .data(service.buscarPorId(id))
+                        .data(service.buscarPorId(id, token))
                         .error(null)
                         .build()
         );
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProductoResponseDTO>> guardar(@Valid @RequestBody ProductoRequestDTO dto) {
+    public ResponseEntity<ApiResponse<ProductoResponseDTO>> guardar(@Valid @RequestBody ProductoRequestDTO dto,
+                                                                    @RequestHeader("Authorization") String token) {
         log.info("POST /api/v1/productos - Creando producto: {}", dto.getNombre());
 
-        ProductoResponseDTO producto = service.guardar(dto);
+        ProductoResponseDTO producto = service.guardar(dto, token);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.<ProductoResponseDTO>builder()
@@ -70,11 +72,12 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductoResponseDTO>> actualizar(
             @PathVariable Long id,
-            @Valid @RequestBody ProductoRequestDTO dto) {
+            @Valid @RequestBody ProductoRequestDTO dto,
+            @RequestHeader("Authorization") String token) {
 
         log.info("PUT /api/v1/productos/{} - Actualizando producto", id);
 
-        ProductoResponseDTO producto = service.actualizar(id, dto);
+        ProductoResponseDTO producto = service.actualizar(id, dto, token);
 
         return ResponseEntity.ok(
                 ApiResponse.<ProductoResponseDTO>builder()

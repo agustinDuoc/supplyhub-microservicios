@@ -9,4 +9,4 @@ CREATE TABLE inventario (
 
 INSERT INTO inventario (id_producto, stock_disponible, stock_minimo, ubicacion, estado)
 VALUES
-(4, 50, 10, 'Bodega A', 'ACTIVO');
+(1, 50, 10, 'Bodega A', 'ACTIVO');

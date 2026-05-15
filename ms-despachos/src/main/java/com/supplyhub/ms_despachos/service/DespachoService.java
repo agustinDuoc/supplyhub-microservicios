@@ -26,23 +26,23 @@ public class DespachoService {
         this.webClient = builder.build();
     }
 
-    public List<DespachoResponseDTO> listar() {
+    public List<DespachoResponseDTO> listar(String token) {
         return repository.findAll()
                 .stream()
-                .map(this::convertir)
+                .map(despacho -> convertir(despacho, token))
                 .toList();
     }
 
-    public DespachoResponseDTO buscarPorId(Long id) {
+    public DespachoResponseDTO buscarPorId(Long id, String token) {
         Despacho despacho = repository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Despacho no encontrado con id: " + id));
 
-        return convertir(despacho);
+        return convertir(despacho, token);
     }
 
-    public DespachoResponseDTO guardar(DespachoRequestDTO dto) {
-        OrdenCompraDTO orden = obtenerOrdenCompra(dto.getIdOrdenCompra());
-        PagoDTO pago = obtenerPago(dto.getIdPago());
+    public DespachoResponseDTO guardar(DespachoRequestDTO dto, String token) {
+        OrdenCompraDTO orden = obtenerOrdenCompra(dto.getIdOrdenCompra(), token);
+        PagoDTO pago = obtenerPago(dto.getIdPago(), token);
 
         if (!"APROBADO".equalsIgnoreCase(pago.getEstadoPago())) {
             throw new RuntimeException("No se puede crear despacho porque el pago no está aprobado");
@@ -60,15 +60,15 @@ public class DespachoService {
 
         log.info("Despacho creado con id {}", guardado.getId());
 
-        return convertir(guardado);
+        return convertir(guardado, token);
     }
 
-    public DespachoResponseDTO actualizar(Long id, DespachoRequestDTO dto) {
+    public DespachoResponseDTO actualizar(Long id, DespachoRequestDTO dto, String token) {
         Despacho despacho = repository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Despacho no encontrado con id: " + id));
 
-        OrdenCompraDTO orden = obtenerOrdenCompra(dto.getIdOrdenCompra());
-        PagoDTO pago = obtenerPago(dto.getIdPago());
+        OrdenCompraDTO orden = obtenerOrdenCompra(dto.getIdOrdenCompra(), token);
+        PagoDTO pago = obtenerPago(dto.getIdPago(), token);
 
         if (!"APROBADO".equalsIgnoreCase(pago.getEstadoPago())) {
             throw new RuntimeException("No se puede actualizar despacho porque el pago no está aprobado");
@@ -80,7 +80,7 @@ public class DespachoService {
         despacho.setEstadoDespacho(dto.getEstadoDespacho());
         despacho.setFechaEntrega(dto.getFechaEntrega());
 
-        return convertir(repository.save(despacho));
+        return convertir(repository.save(despacho), token);
     }
 
     public void eliminar(Long id) {
@@ -90,9 +90,9 @@ public class DespachoService {
         repository.delete(despacho);
     }
 
-    private DespachoResponseDTO convertir(Despacho despacho) {
-        OrdenCompraDTO orden = obtenerOrdenCompra(despacho.getIdOrdenCompra());
-        PagoDTO pago = obtenerPago(despacho.getIdPago());
+    private DespachoResponseDTO convertir(Despacho despacho, String token) {
+        OrdenCompraDTO orden = obtenerOrdenCompra(despacho.getIdOrdenCompra(), token);
+        PagoDTO pago = obtenerPago(despacho.getIdPago(), token);
 
         return DespachoResponseDTO.builder()
                 .id(despacho.getId())
@@ -105,10 +105,11 @@ public class DespachoService {
                 .build();
     }
 
-    private OrdenCompraDTO obtenerOrdenCompra(Long idOrdenCompra) {
+    private OrdenCompraDTO obtenerOrdenCompra(Long idOrdenCompra, String token) {
         try {
             ExternalApiResponse<OrdenCompraDTO> response = webClient.get()
-                    .uri("http://localhost:8088/api/v1/ordenes-compra/" + idOrdenCompra)
+                    .uri("http://localhost:8092/api/v1/ordenes-compra/" + idOrdenCompra)
+                    .header("Authorization", token)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ExternalApiResponse<OrdenCompraDTO>>() {})
                     .block();
@@ -121,10 +122,11 @@ public class DespachoService {
         }
     }
 
-    private PagoDTO obtenerPago(Long idPago) {
+    private PagoDTO obtenerPago(Long idPago, String token) {
         try {
             ExternalApiResponse<PagoDTO> response = webClient.get()
-                    .uri("http://localhost:8089/api/v1/pagos/" + idPago)
+                    .uri("http://localhost:8093/api/v1/pagos/" + idPago)
+                    .header("Authorization", token)
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ExternalApiResponse<PagoDTO>>() {})
                     .block();

@@ -1,0 +1,33 @@
+package com.supplyhub.ms_ordenes_compra.client;
+
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import com.supplyhub.ms_ordenes_compra.dto.ApiResponse;
+import com.supplyhub.ms_ordenes_compra.dto.ClienteDTO;
+
+import lombok.RequiredArgsConstructor;
+
+@Component
+@RequiredArgsConstructor
+public class ClienteClient {
+
+    private final WebClient webClient;
+
+    private static final String BASE_URL = "http://ms-clientes/api/v1/clientes/";
+
+    public ClienteDTO obtenerCliente(Long idCliente, String token) {
+        WebClient.RequestHeadersSpec<?> request = webClient.get().uri(BASE_URL + idCliente);
+
+        if (token != null && !token.isBlank()) {
+            request = request.header("Authorization", token);
+        }
+
+        ApiResponse<ClienteDTO> response = request.retrieve()
+                .bodyToMono(new ParameterizedTypeReference<ApiResponse<ClienteDTO>>() {})
+                .block();
+
+        return response != null ? response.getData() : null;
+    }
+}

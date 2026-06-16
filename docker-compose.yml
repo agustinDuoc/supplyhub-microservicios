@@ -1,0 +1,416 @@
+services:
+  mysql-auth:
+    image: mysql:8
+    container_name: mysql-auth
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_auth
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql_auth_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-clientes:
+    image: mysql:8
+    container_name: mysql-clientes
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_clientes
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3311:3306"
+    volumes:
+      - mysql_clientes_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-proveedores:
+    image: mysql:8
+    container_name: mysql-proveedores
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_proveedores
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3312:3306"
+    volumes:
+      - mysql_proveedores_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-categorias:
+    image: mysql:8
+    container_name: mysql-categorias
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_categorias
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3313:3306"
+    volumes:
+      - mysql_categorias_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-productos:
+    image: mysql:8
+    container_name: mysql-productos
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_productos
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3314:3306"
+    volumes:
+      - mysql_productos_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-cotizaciones:
+    image: mysql:8
+    container_name: mysql-cotizaciones
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_cotizaciones
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3315:3306"
+    volumes:
+      - mysql_cotizaciones_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-inventario:
+    image: mysql:8
+    container_name: mysql-inventario
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_inventario
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3316:3306"
+    volumes:
+      - mysql_inventario_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-ordenes-compra:
+    image: mysql:8
+    container_name: mysql-ordenes-compra
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_ordenes_compra
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3317:3306"
+    volumes:
+      - mysql_ordenes_compra_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-pagos:
+    image: mysql:8
+    container_name: mysql-pagos
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_pagos
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3318:3306"
+    volumes:
+      - mysql_pagos_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  mysql-despachos:
+    image: mysql:8
+    container_name: mysql-despachos
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bd_despachos
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: "1234"
+    ports:
+      - "3319:3306"
+    volumes:
+      - mysql_despachos_data:/var/lib/mysql
+    networks:
+      - supplyhub-network
+
+  ms-eureka:
+    build: ./ms-eureka
+    container_name: ms-eureka
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    networks:
+      - supplyhub-network
+
+  ms-auth:
+    build: ./ms-auth
+    container_name: ms-auth
+    restart: unless-stopped
+    ports:
+      - "8085:8085"
+    environment:
+      DB_HOST: mysql-auth
+      DB_PORT: 3306
+      DB_NAME: bd_auth
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-auth
+      - ms-eureka
+    networks:
+      - supplyhub-network
+
+  ms-clientes:
+    build: ./ms-clientes
+    container_name: ms-clientes
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      DB_HOST: mysql-clientes
+      DB_PORT: 3306
+      DB_NAME: bd_clientes
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-clientes
+      - ms-eureka
+    networks:
+      - supplyhub-network
+
+  ms-proveedores:
+    build: ./ms-proveedores
+    container_name: ms-proveedores
+    restart: unless-stopped
+    ports:
+      - "8087:8087"
+    environment:
+      DB_HOST: mysql-proveedores
+      DB_PORT: 3306
+      DB_NAME: bd_proveedores
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-proveedores
+      - ms-eureka
+    networks:
+      - supplyhub-network
+
+  ms-categorias:
+    build: ./ms-categorias
+    container_name: ms-categorias
+    restart: unless-stopped
+    ports:
+      - "8088:8088"
+    environment:
+      DB_HOST: mysql-categorias
+      DB_PORT: 3306
+      DB_NAME: bd_categorias
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-categorias
+      - ms-eureka
+    networks:
+      - supplyhub-network
+
+  ms-productos:
+    build: ./ms-productos
+    container_name: ms-productos
+    restart: unless-stopped
+    ports:
+      - "8089:8089"
+    environment:
+      DB_HOST: mysql-productos
+      DB_PORT: 3306
+      DB_NAME: bd_productos
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-productos
+      - ms-eureka
+      - ms-categorias
+      - ms-proveedores
+    networks:
+      - supplyhub-network
+
+  ms-cotizaciones:
+    build: ./ms-cotizaciones
+    container_name: ms-cotizaciones
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+    environment:
+      DB_HOST: mysql-cotizaciones
+      DB_PORT: 3306
+      DB_NAME: bd_cotizaciones
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-cotizaciones
+      - ms-eureka
+      - ms-productos
+    networks:
+      - supplyhub-network
+
+  ms-inventario:
+    build: ./ms-inventario
+    container_name: ms-inventario
+    restart: unless-stopped
+    ports:
+      - "8091:8091"
+    environment:
+      DB_HOST: mysql-inventario
+      DB_PORT: 3306
+      DB_NAME: bd_inventario
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-inventario
+      - ms-eureka
+      - ms-productos
+    networks:
+      - supplyhub-network
+
+  ms-ordenes-compra:
+    build: ./ms-ordenes-compra
+    container_name: ms-ordenes-compra
+    restart: unless-stopped
+    ports:
+      - "8092:8092"
+    environment:
+      DB_HOST: mysql-ordenes-compra
+      DB_PORT: 3306
+      DB_NAME: bd_ordenes_compra
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-ordenes-compra
+      - ms-eureka
+      - ms-clientes
+      - ms-inventario
+    networks:
+      - supplyhub-network
+
+  ms-pagos:
+    build: ./ms-pagos
+    container_name: ms-pagos
+    restart: unless-stopped
+    ports:
+      - "8093:8093"
+    environment:
+      DB_HOST: mysql-pagos
+      DB_PORT: 3306
+      DB_NAME: bd_pagos
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-pagos
+      - ms-eureka
+      - ms-ordenes-compra
+    networks:
+      - supplyhub-network
+
+  ms-despachos:
+    build: ./ms-despachos
+    container_name: ms-despachos
+    restart: unless-stopped
+    ports:
+      - "8094:8094"
+    environment:
+      DB_HOST: mysql-despachos
+      DB_PORT: 3306
+      DB_NAME: bd_despachos
+      DB_USER: appuser
+      DB_PASSWORD: "1234"
+      JWT_SECRET: mi_clave_super_secreta_para_supplyhub_2026_muy_larga_segura
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - mysql-despachos
+      - ms-eureka
+      - ms-ordenes-compra
+      - ms-pagos
+    networks:
+      - supplyhub-network
+
+  ms-gateway:
+    build: ./ms-gateway
+    container_name: ms-gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_URL: http://ms-eureka:8761/eureka/
+    depends_on:
+      - ms-eureka
+      - ms-auth
+      - ms-clientes
+      - ms-proveedores
+      - ms-categorias
+      - ms-productos
+      - ms-cotizaciones
+      - ms-inventario
+      - ms-ordenes-compra
+      - ms-pagos
+      - ms-despachos
+    networks:
+      - supplyhub-network
+
+networks:
+  supplyhub-network:
+
+volumes:
+  mysql_auth_data:
+  mysql_clientes_data:
+  mysql_proveedores_data:
+  mysql_categorias_data:
+  mysql_productos_data:
+  mysql_cotizaciones_data:
+  mysql_inventario_data:
+  mysql_ordenes_compra_data:
+  mysql_pagos_data:
+  mysql_despachos_data:

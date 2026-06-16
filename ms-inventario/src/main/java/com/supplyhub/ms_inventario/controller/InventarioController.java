@@ -1,4 +1,4 @@
-package com.supplyhub.ms_inventario.controller;
+﻿package com.supplyhub.ms_inventario.controller;
 
 import java.util.List;
 import org.springframework.http.*;
@@ -11,7 +11,6 @@ import lombok.*;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;

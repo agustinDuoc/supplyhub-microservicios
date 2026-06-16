@@ -17,6 +17,9 @@ import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @AllArgsConstructor
@@ -29,7 +32,17 @@ public class PagoController {
     private final PagoService service;
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Listar recursos", description = "Endpoint para listar recursos")
+            @Operation(summary = "Listar pagos", description = "Retorna la lista completa de pagos registrados en el sistema")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Pagos encontrados","data":[{"id":1,"estado":"ACTIVO"}],"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Token JWT ausente o inválido",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping
     public ResponseEntity<ApiResponse<List<PagoResponseDTO>>> listar(@RequestHeader(value = "Authorization", required = false) String token) {
         log.info("GET /api/v1/pagos - Listando pagos");
@@ -45,7 +58,21 @@ public class PagoController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Buscar recurso por ID", description = "Endpoint para buscar recurso por id")
+            @Operation(summary = "Buscar pago por ID", description = "Retorna un pago específico con links HATEOAS")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pago encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Pago encontrado","data":{"id":1,"estado":"ACTIVO"},"error":null,"_links":{"self":{"href":"/api/v1/pagos/1"},"all":{"href":"/api/v1/pagos"}}}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pago no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Pago no encontrado","data":null,"error":"Pago no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<PagoResponseDTO>>> buscarPorId(@PathVariable Long id, @RequestHeader(value = "Authorization", required = false) String token) {
         log.info("GET /api/v1/pagos/{} - Buscando pago", id);
@@ -66,7 +93,21 @@ public class PagoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Crear recurso", description = "Endpoint para crear recurso")
+            @Operation(summary = "Crear pago", description = "Crea un nuevo pago en el sistema. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Pago creado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Pago creado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos inválidos",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Error de validación","data":null,"error":"Campo requerido no puede estar vacío"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PostMapping
     public ResponseEntity<ApiResponse<PagoResponseDTO>> guardar(@Valid @RequestBody PagoRequestDTO dto, @RequestHeader(value = "Authorization", required = false) String token) {
         log.info("POST /api/v1/pagos - Creando pago para orden {}", dto.getIdOrdenCompra());
@@ -84,7 +125,21 @@ public class PagoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Actualizar recurso", description = "Endpoint para actualizar recurso")
+            @Operation(summary = "Actualizar pago", description = "Actualiza los datos de un pago existente. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pago actualizado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Pago actualizado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pago no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Pago no encontrado","data":null,"error":"Pago no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<PagoResponseDTO>> actualizar(
             @PathVariable Long id,
@@ -104,7 +159,21 @@ public class PagoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Eliminar recurso", description = "Endpoint para eliminar recurso")
+            @Operation(summary = "Eliminar pago", description = "Elimina un pago del sistema por ID. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Pago eliminado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Pago eliminado correctamente","data":null,"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Pago no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Pago no encontrado","data":null,"error":"Pago no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
         log.warn("DELETE /api/v1/pagos/{} - Eliminando pago", id);

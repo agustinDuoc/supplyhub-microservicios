@@ -19,6 +19,9 @@ import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @AllArgsConstructor
@@ -31,7 +34,17 @@ public class ProductoController {
     private final ProductoService service;
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Listar recursos", description = "Endpoint para listar recursos")
+            @Operation(summary = "Listar productos", description = "Retorna la lista completa de productos registrados en el sistema")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Productos encontrados","data":[{"id":1,"estado":"ACTIVO"}],"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Token JWT ausente o inválido",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping
     public ResponseEntity<ApiResponse<List<ProductoResponseDTO>>> listar(@RequestHeader(value = "Authorization", required = false) String token) {
         log.info("GET /api/v1/productos - Listando productos");
@@ -47,7 +60,21 @@ public class ProductoController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Buscar recurso por ID", description = "Endpoint para buscar recurso por id")
+            @Operation(summary = "Buscar producto por ID", description = "Retorna un producto específico con links HATEOAS")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Producto encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Producto encontrado","data":{"id":1,"estado":"ACTIVO"},"error":null,"_links":{"self":{"href":"/api/v1/productos/1"},"all":{"href":"/api/v1/productos"}}}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Producto no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Producto no encontrado","data":null,"error":"Producto no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<ProductoResponseDTO>>> buscarPorId(@PathVariable Long id,
                                                                         @RequestHeader(value = "Authorization", required = false) String token) {
@@ -69,7 +96,21 @@ public class ProductoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Crear recurso", description = "Endpoint para crear recurso")
+            @Operation(summary = "Crear producto", description = "Crea un nuevo producto en el sistema. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Producto creado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Producto creado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos inválidos",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Error de validación","data":null,"error":"Campo requerido no puede estar vacío"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PostMapping
     public ResponseEntity<ApiResponse<ProductoResponseDTO>> guardar(@Valid @RequestBody ProductoRequestDTO dto,
                                                                     @RequestHeader(value = "Authorization", required = false) String token) {
@@ -88,7 +129,21 @@ public class ProductoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Actualizar recurso", description = "Endpoint para actualizar recurso")
+            @Operation(summary = "Actualizar producto", description = "Actualiza los datos de un producto existente. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Producto actualizado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Producto actualizado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Producto no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Producto no encontrado","data":null,"error":"Producto no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<ProductoResponseDTO>> actualizar(
             @PathVariable Long id,
@@ -110,7 +165,21 @@ public class ProductoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Eliminar recurso", description = "Endpoint para eliminar recurso")
+            @Operation(summary = "Eliminar producto", description = "Elimina un producto del sistema por ID. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Producto eliminado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Producto eliminado correctamente","data":null,"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Producto no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Producto no encontrado","data":null,"error":"Producto no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
         log.warn("DELETE /api/v1/productos/{} - Eliminando producto", id);

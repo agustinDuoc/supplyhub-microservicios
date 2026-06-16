@@ -21,6 +21,9 @@ import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @AllArgsConstructor
@@ -33,7 +36,17 @@ public class CategoriaController {
     private final CategoriaService service;
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Listar recursos", description = "Endpoint para listar recursos")
+            @Operation(summary = "Listar categorias", description = "Retorna la lista completa de categorias registrados en el sistema")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Categorias encontrados","data":[{"id":1,"estado":"ACTIVO"}],"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Token JWT ausente o inválido",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping
     public ResponseEntity<ApiResponse<List<Categoria>>> listar() {
         log.info("GET /api/v1/categorias - Listado categorias");
@@ -48,7 +61,21 @@ public class CategoriaController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Buscar recurso por ID", description = "Endpoint para buscar recurso por id")
+            @Operation(summary = "Buscar categoria por ID", description = "Retorna un categoria específico con links HATEOAS")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Categoria encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Categoria encontrado","data":{"id":1,"estado":"ACTIVO"},"error":null,"_links":{"self":{"href":"/api/v1/categorias/1"},"all":{"href":"/api/v1/categorias"}}}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Categoria no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Categoria no encontrado","data":null,"error":"Categoria no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<Categoria>>> buscarPorId(@PathVariable Long id) {
         log.info("GET /api/v1/categorias/{} - Buscando categoria", id);
@@ -68,7 +95,21 @@ public class CategoriaController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Crear recurso", description = "Endpoint para crear recurso")
+            @Operation(summary = "Crear categoria", description = "Crea un nuevo categoria en el sistema. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Categoria creado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Categoria creado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos inválidos",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Error de validación","data":null,"error":"Campo requerido no puede estar vacío"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PostMapping
     public ResponseEntity<ApiResponse<Categoria>> guardar(@Valid @RequestBody CategoriaRequestDTO dto) {
         log.info("POST /api/v1/categorias - Creando categoría: {}", dto.getNombre());
@@ -85,7 +126,21 @@ public class CategoriaController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Actualizar recurso", description = "Endpoint para actualizar recurso")
+            @Operation(summary = "Actualizar categoria", description = "Actualiza los datos de un categoria existente. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Categoria actualizado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Categoria actualizado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Categoria no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Categoria no encontrado","data":null,"error":"Categoria no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Categoria>> actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequestDTO dto) {
         log.info("PUT /api/v1/categorias/{} - Actualizando categoría", id);
@@ -101,7 +156,21 @@ public class CategoriaController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Eliminar recurso", description = "Endpoint para eliminar recurso")
+            @Operation(summary = "Eliminar categoria", description = "Elimina un categoria del sistema por ID. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Categoria eliminado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Categoria eliminado correctamente","data":null,"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Categoria no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Categoria no encontrado","data":null,"error":"Categoria no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
         log.warn("DELETE /api/v1/categorias/{} - Eliminando categoría", id);

@@ -17,6 +17,9 @@ import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @AllArgsConstructor
@@ -29,7 +32,17 @@ public class DespachoController {
     private final DespachoService service;
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Listar recursos", description = "Endpoint para listar recursos")
+            @Operation(summary = "Listar despachos", description = "Retorna la lista completa de despachos registrados en el sistema")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Despachos encontrados","data":[{"id":1,"estado":"ACTIVO"}],"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Token JWT ausente o inválido",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping
     public ResponseEntity<ApiResponse<List<DespachoResponseDTO>>> listar(@RequestHeader(value = "Authorization", required = false) String token) {
         log.info("GET /api/v1/despachos - Listando despachos");
@@ -45,7 +58,21 @@ public class DespachoController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Buscar recurso por ID", description = "Endpoint para buscar recurso por id")
+            @Operation(summary = "Buscar despacho por ID", description = "Retorna un despacho específico con links HATEOAS")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Despacho encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Despacho encontrado","data":{"id":1,"estado":"ACTIVO"},"error":null,"_links":{"self":{"href":"/api/v1/despachos/1"},"all":{"href":"/api/v1/despachos"}}}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Despacho no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Despacho no encontrado","data":null,"error":"Despacho no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<DespachoResponseDTO>>> buscarPorId(@PathVariable Long id, @RequestHeader(value = "Authorization", required = false) String token) {
         log.info("GET /api/v1/despachos/{} - Buscando despacho", id);
@@ -66,7 +93,21 @@ public class DespachoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Crear recurso", description = "Endpoint para crear recurso")
+            @Operation(summary = "Crear despacho", description = "Crea un nuevo despacho en el sistema. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Despacho creado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Despacho creado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos inválidos",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Error de validación","data":null,"error":"Campo requerido no puede estar vacío"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PostMapping
     public ResponseEntity<ApiResponse<DespachoResponseDTO>> guardar(@Valid @RequestBody DespachoRequestDTO dto, @RequestHeader(value = "Authorization", required = false) String token) {
         log.info("POST /api/v1/despachos - Creando despacho para orden {}", dto.getIdOrdenCompra());
@@ -84,7 +125,21 @@ public class DespachoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Actualizar recurso", description = "Endpoint para actualizar recurso")
+            @Operation(summary = "Actualizar despacho", description = "Actualiza los datos de un despacho existente. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Despacho actualizado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Despacho actualizado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Despacho no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Despacho no encontrado","data":null,"error":"Despacho no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<DespachoResponseDTO>> actualizar(
             @PathVariable Long id,
@@ -104,7 +159,21 @@ public class DespachoController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Eliminar recurso", description = "Endpoint para eliminar recurso")
+            @Operation(summary = "Eliminar despacho", description = "Elimina un despacho del sistema por ID. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Despacho eliminado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Despacho eliminado correctamente","data":null,"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Despacho no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Despacho no encontrado","data":null,"error":"Despacho no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
         log.warn("DELETE /api/v1/despachos/{} - Eliminando despacho", id);

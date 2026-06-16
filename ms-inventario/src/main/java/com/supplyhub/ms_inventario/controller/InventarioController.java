@@ -12,6 +12,9 @@ import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @Tag(name = "Inventario", description = "Operaciones CRUD de inventario")
@@ -23,7 +26,17 @@ public class InventarioController {
     private final InventarioService service;
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Listar recursos", description = "Endpoint para listar recursos")
+            @Operation(summary = "Listar inventarios", description = "Retorna la lista completa de inventarios registrados en el sistema")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Lista obtenida exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Inventarios encontrados","data":[{"id":1,"estado":"ACTIVO"}],"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Token JWT ausente o inválido",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping
     public ResponseEntity<ApiResponse<List<InventarioResponseDTO>>> listar(@RequestHeader(value = "Authorization", required = false) String token) {
         return ResponseEntity.ok(
@@ -37,7 +50,21 @@ public class InventarioController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Crear recurso", description = "Endpoint para crear recurso")
+            @Operation(summary = "Crear inventario", description = "Crea un nuevo inventario en el sistema. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "Inventario creado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Inventario creado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Datos inválidos",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Error de validación","data":null,"error":"Campo requerido no puede estar vacío"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PostMapping
     public ResponseEntity<ApiResponse<InventarioResponseDTO>> guardar(@Valid @RequestBody InventarioRequestDTO dto,
                                                                       @RequestHeader(value = "Authorization", required = false) String token) {
@@ -52,7 +79,21 @@ public class InventarioController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN', 'CLIENTE')")
-        @Operation(summary = "Buscar recurso por ID", description = "Endpoint para buscar recurso por id")
+            @Operation(summary = "Buscar inventario por ID", description = "Retorna un inventario específico con links HATEOAS")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Inventario encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Inventario encontrado","data":{"id":1,"estado":"ACTIVO"},"error":null,"_links":{"self":{"href":"/api/v1/inventario/1"},"all":{"href":"/api/v1/inventario"}}}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Inventario no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Inventario no encontrado","data":null,"error":"Inventario no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<InventarioResponseDTO>>> buscarPorId(@PathVariable Long id,
                                                                           @RequestHeader(value = "Authorization", required = false) String token) {
@@ -72,7 +113,21 @@ public class InventarioController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Actualizar recurso", description = "Endpoint para actualizar recurso")
+            @Operation(summary = "Actualizar inventario", description = "Actualiza los datos de un inventario existente. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Inventario actualizado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Inventario actualizado correctamente","data":{"id":1},"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Inventario no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Inventario no encontrado","data":null,"error":"Inventario no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<InventarioResponseDTO>> actualizar(@PathVariable Long id,
                                                                          @Valid @RequestBody InventarioRequestDTO dto,
@@ -88,7 +143,21 @@ public class InventarioController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-        @Operation(summary = "Eliminar recurso", description = "Endpoint para eliminar recurso")
+            @Operation(summary = "Eliminar inventario", description = "Elimina un inventario del sistema por ID. Requiere rol ADMIN")
+    @ApiResponses(value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Inventario eliminado exitosamente",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":true,"message":"Inventario eliminado correctamente","data":null,"error":null}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Inventario no encontrado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"success":false,"message":"Inventario no encontrado","data":null,"error":"Inventario no encontrada con id: 99"}
+                """))),
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "No autorizado",
+            content = @Content(mediaType = "application/json", examples = @ExampleObject(value = """
+                {"timestamp":"2026-06-16","status":401,"error":"Unauthorized","message":"Full authentication is required"}
+                """)))
+    })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
         service.eliminar(id);

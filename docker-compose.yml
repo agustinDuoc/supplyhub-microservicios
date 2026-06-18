@@ -317,7 +317,7 @@ services:
     container_name: ms-ordenes-compra
     restart: unless-stopped
     ports:
-      - "8092:8092"
+      - "8192:8092"
     environment:
       DB_HOST: mysql-ordenes-compra
       DB_PORT: 3306

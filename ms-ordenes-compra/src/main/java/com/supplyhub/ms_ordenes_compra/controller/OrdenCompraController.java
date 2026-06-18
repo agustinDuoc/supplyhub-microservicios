@@ -1,4 +1,4 @@
-﻿package com.supplyhub.ms_ordenes_compra.controller;
+package com.supplyhub.ms_ordenes_compra.controller;
 
 import java.util.List;
 

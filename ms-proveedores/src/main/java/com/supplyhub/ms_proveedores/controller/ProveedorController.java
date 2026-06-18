@@ -1,4 +1,4 @@
-﻿package com.supplyhub.ms_proveedores.controller;
+package com.supplyhub.ms_proveedores.controller;
 
 import java.util.List;
 

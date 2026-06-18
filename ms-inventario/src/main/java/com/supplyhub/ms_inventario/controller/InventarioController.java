@@ -1,4 +1,4 @@
-﻿package com.supplyhub.ms_inventario.controller;
+package com.supplyhub.ms_inventario.controller;
 
 import java.util.List;
 import org.springframework.http.*;

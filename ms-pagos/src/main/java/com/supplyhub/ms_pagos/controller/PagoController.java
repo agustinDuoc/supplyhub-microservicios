@@ -1,4 +1,4 @@
-﻿package com.supplyhub.ms_pagos.controller;
+package com.supplyhub.ms_pagos.controller;
 
 import java.util.List;
 

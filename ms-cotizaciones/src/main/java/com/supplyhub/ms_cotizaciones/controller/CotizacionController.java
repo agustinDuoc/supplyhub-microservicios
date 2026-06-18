@@ -1,4 +1,4 @@
-﻿package com.supplyhub.ms_cotizaciones.controller;
+package com.supplyhub.ms_cotizaciones.controller;
 
 import java.util.List;
 import org.springframework.http.HttpStatus;

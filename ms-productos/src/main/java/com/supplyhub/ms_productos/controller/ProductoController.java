@@ -1,4 +1,4 @@
-﻿package com.supplyhub.ms_productos.controller;
+package com.supplyhub.ms_productos.controller;
 
 import java.util.List;
 

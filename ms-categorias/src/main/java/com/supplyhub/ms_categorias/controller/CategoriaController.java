@@ -1,4 +1,4 @@
-﻿package com.supplyhub.ms_categorias.controller;
+package com.supplyhub.ms_categorias.controller;
 
 import java.util.List;
 

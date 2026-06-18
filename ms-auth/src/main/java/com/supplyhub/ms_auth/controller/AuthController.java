@@ -1,4 +1,4 @@
-﻿package com.supplyhub.ms_auth.controller;
+package com.supplyhub.ms_auth.controller;
 
 
 import org.springframework.http.ResponseEntity;

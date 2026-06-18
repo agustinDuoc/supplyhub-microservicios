@@ -99,6 +99,19 @@ class PagoServiceTest {
     }
 
     @Test
+    void deberiaRechazarOrdenCancelada() {
+        PagoRequestDTO dto = dtoValido();
+        OrdenCompraDTO cancelada = ordenPagable();
+        cancelada.setEstado("CANCELADA");
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(cancelada);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("orden cancelada"));
+        verify(repository, never()).save(any(Pago.class));
+    }
+
+    @Test
     void deberiaActualizarPagoCorrectamente() {
         Pago existente = new Pago(1L, 1L, 30000, "TRANSFERENCIA", "PENDIENTE", LocalDate.now());
         PagoRequestDTO dto = dtoValido();

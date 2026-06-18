@@ -116,6 +116,121 @@ class DespachoServiceTest {
     }
 
     @Test
+    void deberiaRechazarOrdenCancelada() {
+        DespachoRequestDTO dto = dtoValido();
+        OrdenCompraDTO cancelada = ordenDespachable();
+        cancelada.setEstado("CANCELADA");
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(cancelada);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("orden cancelada"));
+        verify(repository, never()).save(any(Despacho.class));
+    }
+
+    @Test
+    void deberiaRechazarPagoNoAprobado() {
+        DespachoRequestDTO dto = dtoValido();
+        PagoDTO pendiente = pagoAprobado();
+        pendiente.setEstadoPago("PENDIENTE");
+
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(ordenDespachable());
+        when(pagoClient.obtenerPago(1L, null)).thenReturn(pendiente);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("pago no está aprobado"));
+        verify(repository, never()).save(any(Despacho.class));
+    }
+
+    @Test
+    void deberiaRechazarPagoDeOtraOrden() {
+        DespachoRequestDTO dto = dtoValido();
+        PagoDTO pagoOtraOrden = new PagoDTO(1L, Map.of("id", 99L), 30000, "TRANSFERENCIA", "APROBADO",
+                LocalDate.now());
+
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(ordenDespachable());
+        when(pagoClient.obtenerPago(1L, null)).thenReturn(pagoOtraOrden);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("no corresponde"));
+        verify(repository, never()).save(any(Despacho.class));
+    }
+
+    @Test
+    void deberiaRechazarFechaEntregaPasada() {
+        DespachoRequestDTO dto = dtoValido();
+        dto.setFechaEntrega(LocalDate.now().minusDays(1));
+
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(ordenDespachable());
+        when(pagoClient.obtenerPago(1L, null)).thenReturn(pagoAprobado());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("fecha de entrega"));
+        verify(repository, never()).save(any(Despacho.class));
+    }
+
+    @Test
+    void deberiaRechazarDespachoDuplicadoPorOrden() {
+        DespachoRequestDTO dto = dtoValido();
+        Despacho existente = new Despacho(2L, 1L, 2L, "Av. Antigua", "ENVIADO",
+                LocalDate.now(), LocalDate.now().plusDays(2));
+
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(ordenDespachable());
+        when(pagoClient.obtenerPago(1L, null)).thenReturn(pagoAprobado());
+        when(repository.findByIdOrdenCompra(1L)).thenReturn(Optional.of(existente));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("Ya existe"));
+        verify(repository, never()).save(any(Despacho.class));
+    }
+
+    @Test
+    void deberiaRechazarDespachoDuplicadoPorPago() {
+        DespachoRequestDTO dto = dtoValido();
+        Despacho existente = new Despacho(2L, 2L, 1L, "Av. Antigua", "ENVIADO",
+                LocalDate.now(), LocalDate.now().plusDays(2));
+
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(ordenDespachable());
+        when(pagoClient.obtenerPago(1L, null)).thenReturn(pagoAprobado());
+        when(repository.findByIdOrdenCompra(1L)).thenReturn(Optional.empty());
+        when(repository.findByIdPago(1L)).thenReturn(Optional.of(existente));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("Ya existe"));
+        verify(repository, never()).save(any(Despacho.class));
+    }
+
+    @Test
+    void deberiaRechazarEstadoDespachoInvalido() {
+        DespachoRequestDTO dto = dtoValido();
+        dto.setEstadoDespacho("BORRADOR");
+
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(ordenDespachable());
+        when(pagoClient.obtenerPago(1L, null)).thenReturn(pagoAprobado());
+        when(repository.findByIdOrdenCompra(1L)).thenReturn(Optional.empty());
+        when(repository.findByIdPago(1L)).thenReturn(Optional.empty());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("estado del despacho"));
+        verify(repository, never()).save(any(Despacho.class));
+    }
+
+    @Test
+    void deberiaLanzarExcepcionCuandoOrdenExternaNoExiste() {
+        DespachoRequestDTO dto = dtoValido();
+        when(ordenCompraClient.obtenerOrdenCompra(1L, null)).thenReturn(null);
+
+        assertThrows(RecursoNoEncontradoException.class, () -> service.guardar(dto, null));
+        verify(repository, never()).save(any(Despacho.class));
+    }
+
+    @Test
     void deberiaActualizarDespachoCorrectamente() {
         Despacho existente = new Despacho(1L, 1L, 1L, "Av. Vieja", "EN_PREPARACION",
                 LocalDate.now(), LocalDate.now().plusDays(3));
@@ -159,4 +274,3 @@ class DespachoServiceTest {
         verify(repository, never()).delete(any(Despacho.class));
     }
 }
-

@@ -96,6 +96,18 @@ class CotizacionServiceTest {
     }
 
     @Test
+    void deberiaRechazarEstadoInvalido() {
+        CotizacionRequestDTO dto = dtoValido();
+        dto.setEstado("BORRADOR");
+        when(productoClient.obtenerProducto(1L, null)).thenReturn(productoActivo());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("VIGENTE"));
+        verify(repository, never()).save(any(Cotizacion.class));
+    }
+
+    @Test
     void deberiaActualizarCotizacionCorrectamente() {
         Cotizacion existente = new Cotizacion(1L, 1L, 2, 30000, "VIGENTE");
         CotizacionRequestDTO dto = dtoValido();

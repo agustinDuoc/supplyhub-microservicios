@@ -112,6 +112,80 @@ class OrdenCompraServiceTest {
     }
 
     @Test
+    void deberiaRechazarClienteInactivo() {
+        OrdenCompraRequestDTO dto = dtoValido();
+        ClienteDTO inactivo = clienteActivo();
+        inactivo.setEstado("INACTIVO");
+        when(clienteClient.obtenerCliente(1L, null)).thenReturn(inactivo);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("cliente inactivo"));
+        verify(repository, never()).save(any(OrdenCompra.class));
+    }
+
+    @Test
+    void deberiaRechazarInventarioSinStock() {
+        OrdenCompraRequestDTO dto = dtoValido();
+        InventarioDTO sinStock = inventarioDisponible();
+        sinStock.setEstado("SIN_STOCK");
+
+        when(clienteClient.obtenerCliente(1L, null)).thenReturn(clienteActivo());
+        when(inventarioClient.obtenerInventario(1L, null)).thenReturn(sinStock);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("inventario sin stock"));
+        verify(repository, never()).save(any(OrdenCompra.class));
+    }
+
+    @Test
+    void deberiaRechazarStockInsuficiente() {
+        OrdenCompraRequestDTO dto = dtoValido();
+        dto.setCantidad(200);
+
+        when(clienteClient.obtenerCliente(1L, null)).thenReturn(clienteActivo());
+        when(inventarioClient.obtenerInventario(1L, null)).thenReturn(inventarioDisponible());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("Stock insuficiente"));
+        verify(repository, never()).save(any(OrdenCompra.class));
+    }
+
+    @Test
+    void deberiaRechazarEstadoInvalido() {
+        OrdenCompraRequestDTO dto = dtoValido();
+        dto.setEstado("BORRADOR");
+
+        when(clienteClient.obtenerCliente(1L, null)).thenReturn(clienteActivo());
+        when(inventarioClient.obtenerInventario(1L, null)).thenReturn(inventarioDisponible());
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("PENDIENTE"));
+        verify(repository, never()).save(any(OrdenCompra.class));
+    }
+
+    @Test
+    void deberiaCalcularTotalConPrecioNumericoNoEntero() {
+        OrdenCompraRequestDTO dto = dtoValido();
+        InventarioDTO inventario = new InventarioDTO(1L, Map.of("precio", 15000L), 100, 10, "Bodega A", "DISPONIBLE");
+
+        when(clienteClient.obtenerCliente(1L, null)).thenReturn(clienteActivo());
+        when(inventarioClient.obtenerInventario(1L, null)).thenReturn(inventario);
+        when(repository.save(any(OrdenCompra.class))).thenAnswer(inv -> {
+            OrdenCompra o = inv.getArgument(0);
+            o.setId(1L);
+            return o;
+        });
+
+        OrdenCompraResponseDTO resultado = service.guardar(dto, null);
+
+        assertEquals(30000, resultado.getTotal());
+    }
+
+    @Test
     void deberiaActualizarOrdenCorrectamente() {
         OrdenCompra existente = new OrdenCompra(1L, 1L, 1L, 2, 30000, "PENDIENTE", LocalDate.now());
         OrdenCompraRequestDTO dto = dtoValido();
@@ -150,4 +224,3 @@ class OrdenCompraServiceTest {
         verify(repository, never()).delete(any(OrdenCompra.class));
     }
 }
-

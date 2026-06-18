@@ -99,6 +99,19 @@ class InventarioServiceTest {
     }
 
     @Test
+    void deberiaRechazarProductoInactivo() {
+        InventarioRequestDTO dto = dtoValido();
+        ProductoDTO inactivo = productoActivo();
+        inactivo.setEstado("INACTIVO");
+        when(productoClient.obtenerProducto(1L, null)).thenReturn(inactivo);
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto, null));
+
+        assertTrue(ex.getMessage().contains("producto inactivo"));
+        verify(repository, never()).save(any(Inventario.class));
+    }
+
+    @Test
     void deberiaActualizarInventarioCorrectamente() {
         Inventario existente = new Inventario(1L, 1L, 50, 10, "Bodega A", "DISPONIBLE");
         InventarioRequestDTO dto = dtoValido();

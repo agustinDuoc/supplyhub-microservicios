@@ -14,7 +14,7 @@ Sistema de gestión de cadena de suministro basado en microservicios con Spring 
 | Servicio | Puerto local | Descripción |
 |---|---|---|
 | ms-eureka | 8761 | Service Discovery (Eureka Server) |
-| ms-gateway | 8080 | API Gateway (Spring Cloud Gateway) |
+| ms-gateway | 8099 | API Gateway (Spring Cloud Gateway) |
 | ms-auth | 8085 | Autenticación y generación de JWT |
 | ms-clientes | 8086 | Gestión de clientes empresariales |
 | ms-proveedores | 8087 | Gestión de proveedores |
@@ -28,7 +28,7 @@ Sistema de gestión de cadena de suministro basado en microservicios con Spring 
 
 ## Rutas principales del API Gateway
 
-Todas las rutas pasan por el Gateway en `http://localhost:8080`.
+Todas las rutas pasan por el Gateway en `http://localhost:8099`.
 
 | Prefijo | Servicio destino |
 |---|---|
@@ -78,7 +78,7 @@ Esto levanta todos los servicios y sus bases de datos MySQL.
 1. Levantar primero **ms-eureka** (puerto 8761)
 2. Levantar **ms-auth** (requiere MySQL en puerto 3310)
 3. Levantar el resto de microservicios en cualquier orden
-4. Levantar **ms-gateway** al final (puerto 8080)
+4. Levantar **ms-gateway** al final (puerto 8099)
 
 Cada servicio usa H2 en memoria para tests (no requiere MySQL para pruebas).
 

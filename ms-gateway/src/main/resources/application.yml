@@ -48,7 +48,7 @@ spring:
                 - Path=/api/v1/despachos/**
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8099}
 
 eureka:
   client:

@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -81,6 +82,7 @@ public class OrdenCompraController {
             @PathVariable Long id,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
+        validarId(id);
         log.info("GET /api/v1/ordenes-compra/{} - Buscando orden de compra", id);
 
         ApiResponse<OrdenCompraResponseDTO> response = ApiResponse.<OrdenCompraResponseDTO>builder()
@@ -93,6 +95,7 @@ public class OrdenCompraController {
         EntityModel<ApiResponse<OrdenCompraResponseDTO>> recurso = EntityModel.of(response);
         recurso.add(linkTo(methodOn(OrdenCompraController.class).buscarPorId(id, null)).withSelfRel());
         recurso.add(linkTo(methodOn(OrdenCompraController.class).listar(null)).withRel("all"));
+        recurso.add(linkTo(methodOn(OrdenCompraController.class).actualizar(id, null, null)).withRel("update"));
         recurso.add(linkTo(methodOn(OrdenCompraController.class).eliminar(id)).withRel("delete"));
 
         return ResponseEntity.ok(recurso);
@@ -155,6 +158,7 @@ public class OrdenCompraController {
             @Valid @RequestBody OrdenCompraRequestDTO dto,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
+        validarId(id);
         log.info("PUT /api/v1/ordenes-compra/{} - Actualizando orden de compra", id);
 
         return ResponseEntity.ok(
@@ -186,6 +190,7 @@ public class OrdenCompraController {
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
 
+        validarId(id);
         log.warn("DELETE /api/v1/ordenes-compra/{} - Eliminando orden de compra", id);
 
         service.eliminar(id);
@@ -198,5 +203,21 @@ public class OrdenCompraController {
                         .error(null)
                         .build()
         );
+    }
+
+    private void validarId(Long id) {
+        if (id == null) {
+            String mensaje = "El id de la orden de compra es obligatorio";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id <= 0) {
+            String mensaje = "El id de la orden de compra debe ser positivo";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id > 999999L) {
+            String mensaje = "El id de la orden de compra está fuera del rango permitido";
+            String detalle = "Valor recibido: " + id;
+            throw new IllegalArgumentException(mensaje + ". " + detalle);
+        }
     }
 }

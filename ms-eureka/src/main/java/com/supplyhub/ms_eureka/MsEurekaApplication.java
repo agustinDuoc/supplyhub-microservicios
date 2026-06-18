@@ -12,4 +12,3 @@ public class MsEurekaApplication {
         SpringApplication.run(MsEurekaApplication.class, args);
     }
 }
-

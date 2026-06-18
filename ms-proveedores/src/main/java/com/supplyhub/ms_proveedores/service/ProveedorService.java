@@ -31,14 +31,19 @@ public class ProveedorService {
     }
 
     public Proveedor guardar(ProveedorRequestDTO dto) {
-        validarRutDisponible(dto.getRutProveedor(), null);
+        String rut = limpiarTexto(dto.getRutProveedor(), "rutProveedor", 20);
+        String nombre = limpiarTexto(dto.getNombre(), "nombre", 150);
+        String email = limpiarTexto(dto.getEmail(), "email", 120).toLowerCase();
+        String telefono = limpiarTexto(dto.getTelefono(), "telefono", 30);
+        String direccion = limpiarTexto(dto.getDireccion(), "direccion", 255);
+        validarRutDisponible(rut, null);
 
         Proveedor proveedor = new Proveedor();
-        proveedor.setRutProveedor(dto.getRutProveedor().trim());
-        proveedor.setNombre(dto.getNombre().trim());
-        proveedor.setEmail(dto.getEmail().trim().toLowerCase());
-        proveedor.setTelefono(dto.getTelefono().trim());
-        proveedor.setDireccion(dto.getDireccion().trim());
+        proveedor.setRutProveedor(rut);
+        proveedor.setNombre(nombre);
+        proveedor.setEmail(email);
+        proveedor.setTelefono(telefono);
+        proveedor.setDireccion(direccion);
         proveedor.setEstado(normalizarEstado(dto.getEstado()));
 
         return repository.save(proveedor);
@@ -46,13 +51,18 @@ public class ProveedorService {
 
     public Proveedor actualizar(Long id, ProveedorRequestDTO dto) {
         Proveedor proveedor = buscarPorId(id);
-        validarRutDisponible(dto.getRutProveedor(), id);
+        String rut = limpiarTexto(dto.getRutProveedor(), "rutProveedor", 20);
+        String nombre = limpiarTexto(dto.getNombre(), "nombre", 150);
+        String email = limpiarTexto(dto.getEmail(), "email", 120).toLowerCase();
+        String telefono = limpiarTexto(dto.getTelefono(), "telefono", 30);
+        String direccion = limpiarTexto(dto.getDireccion(), "direccion", 255);
+        validarRutDisponible(rut, id);
 
-        proveedor.setRutProveedor(dto.getRutProveedor().trim());
-        proveedor.setNombre(dto.getNombre().trim());
-        proveedor.setEmail(dto.getEmail().trim().toLowerCase());
-        proveedor.setTelefono(dto.getTelefono().trim());
-        proveedor.setDireccion(dto.getDireccion().trim());
+        proveedor.setRutProveedor(rut);
+        proveedor.setNombre(nombre);
+        proveedor.setEmail(email);
+        proveedor.setTelefono(telefono);
+        proveedor.setDireccion(direccion);
         proveedor.setEstado(normalizarEstado(dto.getEstado()));
 
         return repository.save(proveedor);
@@ -61,6 +71,22 @@ public class ProveedorService {
     public void eliminar(Long id) {
         Proveedor proveedor = buscarPorId(id);
         repository.delete(proveedor);
+    }
+
+    private String limpiarTexto(String valor, String campo, int maximo) {
+        if (valor == null) {
+            String mensaje = "El campo " + campo + " es obligatorio";
+            throw new RuntimeException(mensaje);
+        }
+        if (valor.isBlank()) {
+            String mensaje = "El campo " + campo + " no puede estar vacío";
+            throw new RuntimeException(mensaje);
+        }
+        if (valor.length() > maximo) {
+            String mensaje = "El campo " + campo + " no puede superar " + maximo + " caracteres";
+            throw new RuntimeException(mensaje);
+        }
+        return valor.trim();
     }
 
     private void validarRutDisponible(String rutProveedor, Long idActual) {

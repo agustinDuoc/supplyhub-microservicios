@@ -31,11 +31,13 @@ public class CategoriaService {
     }
 
     public Categoria guardar(CategoriaRequestDTO dto) {
-        validarNombreDisponible(dto.getNombre(), null);
+        String nombre = limpiarTexto(dto.getNombre(), "nombre", 100);
+        String descripcion = limpiarTexto(dto.getDescripcion(), "descripcion", 255);
+        validarNombreDisponible(nombre, null);
 
         Categoria categoria = new Categoria();
-        categoria.setNombre(dto.getNombre().trim());
-        categoria.setDescripcion(dto.getDescripcion().trim());
+        categoria.setNombre(nombre);
+        categoria.setDescripcion(descripcion);
         categoria.setEstado(normalizarEstado(dto.getEstado()));
 
         return repository.save(categoria);
@@ -43,10 +45,12 @@ public class CategoriaService {
     
     public Categoria actualizar(Long id, CategoriaRequestDTO dto) {
         Categoria categoria = buscarPorId(id);
-        validarNombreDisponible(dto.getNombre(), id);
+        String nombre = limpiarTexto(dto.getNombre(), "nombre", 100);
+        String descripcion = limpiarTexto(dto.getDescripcion(), "descripcion", 255);
+        validarNombreDisponible(nombre, id);
 
-        categoria.setNombre(dto.getNombre().trim());
-        categoria.setDescripcion(dto.getDescripcion().trim());
+        categoria.setNombre(nombre);
+        categoria.setDescripcion(descripcion);
         categoria.setEstado(normalizarEstado(dto.getEstado()));
 
         return repository.save(categoria);
@@ -55,6 +59,22 @@ public class CategoriaService {
     public void eliminar(Long id) {
         Categoria categoria = buscarPorId(id);
         repository.delete(categoria);
+    }
+
+    private String limpiarTexto(String valor, String campo, int maximo) {
+        if (valor == null) {
+            String mensaje = "El campo " + campo + " es obligatorio";
+            throw new RuntimeException(mensaje);
+        }
+        if (valor.isBlank()) {
+            String mensaje = "El campo " + campo + " no puede estar vacío";
+            throw new RuntimeException(mensaje);
+        }
+        if (valor.length() > maximo) {
+            String mensaje = "El campo " + campo + " no puede superar " + maximo + " caracteres";
+            throw new RuntimeException(mensaje);
+        }
+        return valor.trim();
     }
 
     private void validarNombreDisponible(String nombre, Long idActual) {

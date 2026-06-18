@@ -20,6 +20,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -77,6 +78,7 @@ public class CategoriaController {
     })
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<Categoria>>> buscarPorId(@PathVariable Long id) {
+        validarId(id);
         log.info("GET /api/v1/categorias/{} - Buscando categoria", id);
         ApiResponse<Categoria> response = ApiResponse.<Categoria>builder()
                         .success(true)
@@ -88,6 +90,7 @@ public class CategoriaController {
         EntityModel<ApiResponse<Categoria>> recurso = EntityModel.of(response);
         recurso.add(linkTo(methodOn(CategoriaController.class).buscarPorId(id)).withSelfRel());
         recurso.add(linkTo(methodOn(CategoriaController.class).listar()).withRel("all"));
+        recurso.add(linkTo(methodOn(CategoriaController.class).actualizar(id, null)).withRel("update"));
         recurso.add(linkTo(methodOn(CategoriaController.class).eliminar(id)).withRel("delete"));
 
         return ResponseEntity.ok(recurso);
@@ -142,6 +145,7 @@ public class CategoriaController {
     })
 @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<Categoria>> actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequestDTO dto) {
+        validarId(id);
         log.info("PUT /api/v1/categorias/{} - Actualizando categoría", id);
         Categoria categoria = service.actualizar(id, dto);
         return ResponseEntity.ok(
@@ -172,6 +176,7 @@ public class CategoriaController {
     })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+        validarId(id);
         log.warn("DELETE /api/v1/categorias/{} - Eliminando categoría", id);
         service.eliminar(id);
 
@@ -183,5 +188,21 @@ public class CategoriaController {
                         .error(null)
                         .build()
         );
+    }
+
+    private void validarId(Long id) {
+        if (id == null) {
+            String mensaje = "El id de la categoría es obligatorio";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id <= 0) {
+            String mensaje = "El id de la categoría debe ser positivo";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id > 999999L) {
+            String mensaje = "El id de la categoría está fuera del rango permitido";
+            String detalle = "Valor recibido: " + id;
+            throw new IllegalArgumentException(mensaje + ". " + detalle);
+        }
     }
 }

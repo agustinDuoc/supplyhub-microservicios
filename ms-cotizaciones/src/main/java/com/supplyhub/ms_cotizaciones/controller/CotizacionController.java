@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -65,12 +66,14 @@ public class CotizacionController {
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<CotizacionResponseDTO>>> buscarPorId(@PathVariable Long id,
             @RequestHeader(value = "Authorization", required = false) String token) {
+        validarId(id);
         ApiResponse<CotizacionResponseDTO> response = ApiResponse.<CotizacionResponseDTO>builder()
                 .success(true).message("Cotización encontrada").data(service.buscarPorId(id, token)).error(null).build();
 
         EntityModel<ApiResponse<CotizacionResponseDTO>> recurso = EntityModel.of(response);
         recurso.add(linkTo(methodOn(CotizacionController.class).buscarPorId(id, null)).withSelfRel());
         recurso.add(linkTo(methodOn(CotizacionController.class).listar(null)).withRel("all"));
+        recurso.add(linkTo(methodOn(CotizacionController.class).actualizar(id, null, null)).withRel("update"));
         recurso.add(linkTo(methodOn(CotizacionController.class).eliminar(id)).withRel("delete"));
 
         return ResponseEntity.ok(recurso);
@@ -119,6 +122,7 @@ public class CotizacionController {
     public ResponseEntity<ApiResponse<CotizacionResponseDTO>> actualizar(@PathVariable Long id,
             @Valid @RequestBody CotizacionRequestDTO dto,
             @RequestHeader(value = "Authorization", required = false) String token) {
+        validarId(id);
         return ResponseEntity.ok(ApiResponse.<CotizacionResponseDTO>builder()
                 .success(true).message("Cotización actualizada correctamente").data(service.actualizar(id, dto, token)).error(null).build());
     }
@@ -141,8 +145,19 @@ public class CotizacionController {
     })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+        validarId(id);
         service.eliminar(id);
         return ResponseEntity.ok(ApiResponse.builder()
                 .success(true).message("Cotización eliminada correctamente").data(null).error(null).build());
+    }
+
+    private void validarId(Long id) {
+        if (id == null) {
+            String mensaje = "El id de la cotización es obligatorio";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id <= 0) {
+            throw new IllegalArgumentException("El id de la cotización debe ser positivo");
+        }
     }
 }

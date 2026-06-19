@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -77,6 +78,7 @@ public class ProductoController {
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<ProductoResponseDTO>>> buscarPorId(@PathVariable Long id,
                                                                         @RequestHeader(value = "Authorization", required = false) String token) {
+        validarId(id);
         log.info("GET /api/v1/productos/{} - Buscando producto", id);
 
         ApiResponse<ProductoResponseDTO> response = ApiResponse.<ProductoResponseDTO>builder()
@@ -89,6 +91,7 @@ public class ProductoController {
         EntityModel<ApiResponse<ProductoResponseDTO>> recurso = EntityModel.of(response);
         recurso.add(linkTo(methodOn(ProductoController.class).buscarPorId(id, null)).withSelfRel());
         recurso.add(linkTo(methodOn(ProductoController.class).listar(null)).withRel("all"));
+        recurso.add(linkTo(methodOn(ProductoController.class).actualizar(id, null, null)).withRel("update"));
         recurso.add(linkTo(methodOn(ProductoController.class).eliminar(id)).withRel("delete"));
 
         return ResponseEntity.ok(recurso);
@@ -149,6 +152,7 @@ public class ProductoController {
             @Valid @RequestBody ProductoRequestDTO dto,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
+        validarId(id);
         log.info("PUT /api/v1/productos/{} - Actualizando producto", id);
 
         ProductoResponseDTO producto = service.actualizar(id, dto, token);
@@ -181,6 +185,7 @@ public class ProductoController {
     })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+        validarId(id);
         log.warn("DELETE /api/v1/productos/{} - Eliminando producto", id);
 
         service.eliminar(id);
@@ -193,5 +198,21 @@ public class ProductoController {
                         .error(null)
                         .build()
         );
+    }
+
+    private void validarId(Long id) {
+        if (id == null) {
+            String mensaje = "El id del producto es obligatorio";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id <= 0) {
+            String mensaje = "El id del producto debe ser positivo";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id > 999999L) {
+            String mensaje = "El id del producto está fuera del rango permitido";
+            String detalle = "Valor recibido: " + id;
+            throw new IllegalArgumentException(mensaje + ". " + detalle);
+        }
     }
 }

@@ -31,15 +31,20 @@ public class ClienteService {
     }
 
     public Cliente guardar(ClienteRequestDTO dto) {
-        validarRutDisponible(dto.getRutEmpresa(), null);
-        validarEmailDisponible(dto.getEmail(), null);
+        String rut = limpiarTexto(dto.getRutEmpresa(), "rutEmpresa", 20);
+        String razonSocial = limpiarTexto(dto.getRazonSocial(), "razonSocial", 150);
+        String email = limpiarTexto(dto.getEmail(), "email", 120).toLowerCase();
+        String telefono = limpiarTexto(dto.getTelefono(), "telefono", 30);
+        String direccion = limpiarTexto(dto.getDireccion(), "direccion", 255);
+        validarRutDisponible(rut, null);
+        validarEmailDisponible(email, null);
 
         Cliente cliente = new Cliente();
-        cliente.setRutEmpresa(dto.getRutEmpresa().trim());
-        cliente.setRazonSocial(dto.getRazonSocial().trim());
-        cliente.setEmail(dto.getEmail().trim().toLowerCase());
-        cliente.setTelefono(dto.getTelefono().trim());
-        cliente.setDireccion(dto.getDireccion().trim());
+        cliente.setRutEmpresa(rut);
+        cliente.setRazonSocial(razonSocial);
+        cliente.setEmail(email);
+        cliente.setTelefono(telefono);
+        cliente.setDireccion(direccion);
         cliente.setEstado(normalizarEstado(dto.getEstado()));
 
         return repository.save(cliente);
@@ -47,14 +52,19 @@ public class ClienteService {
 
     public Cliente actualizar(Long id, ClienteRequestDTO dto) {
         Cliente cliente = buscarPorId(id);
-        validarRutDisponible(dto.getRutEmpresa(), id);
-        validarEmailDisponible(dto.getEmail(), id);
+        String rut = limpiarTexto(dto.getRutEmpresa(), "rutEmpresa", 20);
+        String razonSocial = limpiarTexto(dto.getRazonSocial(), "razonSocial", 150);
+        String email = limpiarTexto(dto.getEmail(), "email", 120).toLowerCase();
+        String telefono = limpiarTexto(dto.getTelefono(), "telefono", 30);
+        String direccion = limpiarTexto(dto.getDireccion(), "direccion", 255);
+        validarRutDisponible(rut, id);
+        validarEmailDisponible(email, id);
 
-        cliente.setRutEmpresa(dto.getRutEmpresa().trim());
-        cliente.setRazonSocial(dto.getRazonSocial().trim());
-        cliente.setEmail(dto.getEmail().trim().toLowerCase());
-        cliente.setTelefono(dto.getTelefono().trim());
-        cliente.setDireccion(dto.getDireccion().trim());
+        cliente.setRutEmpresa(rut);
+        cliente.setRazonSocial(razonSocial);
+        cliente.setEmail(email);
+        cliente.setTelefono(telefono);
+        cliente.setDireccion(direccion);
         cliente.setEstado(normalizarEstado(dto.getEstado()));
 
         return repository.save(cliente);
@@ -63,6 +73,22 @@ public class ClienteService {
     public void eliminar(Long id) {
         Cliente cliente = buscarPorId(id);
         repository.delete(cliente);
+    }
+
+    private String limpiarTexto(String valor, String campo, int maximo) {
+        if (valor == null) {
+            String mensaje = "El campo " + campo + " es obligatorio";
+            throw new RuntimeException(mensaje);
+        }
+        if (valor.isBlank()) {
+            String mensaje = "El campo " + campo + " no puede estar vacío";
+            throw new RuntimeException(mensaje);
+        }
+        if (valor.length() > maximo) {
+            String mensaje = "El campo " + campo + " no puede superar " + maximo + " caracteres";
+            throw new RuntimeException(mensaje);
+        }
+        return valor.trim();
     }
 
     private void validarRutDisponible(String rutEmpresa, Long idActual) {

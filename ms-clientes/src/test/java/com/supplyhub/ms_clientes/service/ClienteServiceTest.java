@@ -16,7 +16,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 
 @ExtendWith(MockitoExtension.class)
 class ClienteServiceTest {
@@ -135,5 +134,4 @@ class ClienteServiceTest {
         verify(repository).findById(99L);
         verify(repository, never()).save(any(Cliente.class));
     }
-
 }

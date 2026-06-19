@@ -81,6 +81,48 @@ class CategoriaServiceTest {
     }
 
     @Test
+    void deberiaRechazarCategoriaConNombreDuplicado() {
+        CategoriaRequestDTO dto = new CategoriaRequestDTO();
+        dto.setNombre("Repuestos");
+        dto.setDescripcion("Piezas industriales");
+        dto.setEstado("ACTIVO");
+
+        when(repository.findByNombreIgnoreCase("Repuestos"))
+                .thenReturn(Optional.of(new Categoria(1L, "Repuestos", "Duplicada", "ACTIVO")));
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto));
+
+        assertTrue(ex.getMessage().contains("Ya existe"));
+        verify(repository, never()).save(any(Categoria.class));
+    }
+
+    @Test
+    void deberiaRechazarCategoriaConEstadoInvalido() {
+        CategoriaRequestDTO dto = new CategoriaRequestDTO();
+        dto.setNombre("Repuestos");
+        dto.setDescripcion("Piezas industriales");
+        dto.setEstado("BORRADOR");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto));
+
+        assertTrue(ex.getMessage().contains("ACTIVO o INACTIVO"));
+        verify(repository, never()).save(any(Categoria.class));
+    }
+
+    @Test
+    void deberiaRechazarCategoriaConNombreVacio() {
+        CategoriaRequestDTO dto = new CategoriaRequestDTO();
+        dto.setNombre("   ");
+        dto.setDescripcion("Piezas industriales");
+        dto.setEstado("ACTIVO");
+
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> service.guardar(dto));
+
+        assertTrue(ex.getMessage().contains("no puede estar vacío"));
+        verify(repository, never()).save(any(Categoria.class));
+    }
+
+    @Test
     void deberiaActualizarCategoriaCorrectamente() {
         Categoria existente = new Categoria(1L, "Nombre viejo", "Descripcion vieja", "ACTIVO");
         CategoriaRequestDTO dto = new CategoriaRequestDTO();

@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -40,6 +41,8 @@ public class AuthController {
     })
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest req) {
+        validarTexto(req.getUsername(), "username");
+        validarTexto(req.getPassword(), "password");
         log.info("POST /auth/register - usuario: {}", req.getUsername());
 
         AuthResponse res = service.register(req);
@@ -67,6 +70,8 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<EntityModel<ApiResponse<AuthResponse>>> login(@Valid @RequestBody LoginRequest req) {
+        validarTexto(req.getUsername(), "username");
+        validarTexto(req.getPassword(), "password");
         log.info("POST /auth/login - usuario: {}", req.getUsername());
 
         AuthResponse res = service.login(req);
@@ -99,6 +104,7 @@ public class AuthController {
     })
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshRequest req) {
+        validarTexto(req.getRefreshToken(), "refreshToken");
 
         AuthResponse res = service.refresh(req.getRefreshToken());
 
@@ -110,5 +116,17 @@ public class AuthController {
                         .error(null)
                         .build()
         );
+    }
+
+    private void validarTexto(String valor, String campo) {
+        if (valor == null) {
+            String mensaje = "El campo " + campo + " es obligatorio";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (valor.isBlank()) {
+            String mensaje = "El campo " + campo + " no puede estar vacío";
+            String detalle = "Valor recibido vacío";
+            throw new IllegalArgumentException(mensaje + ". " + detalle);
+        }
     }
 }

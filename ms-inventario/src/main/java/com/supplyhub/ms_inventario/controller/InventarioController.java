@@ -11,6 +11,7 @@ import lombok.*;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -96,6 +97,7 @@ public class InventarioController {
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<InventarioResponseDTO>>> buscarPorId(@PathVariable Long id,
                                                                           @RequestHeader(value = "Authorization", required = false) String token) {
+        validarId(id);
         ApiResponse<InventarioResponseDTO> response = ApiResponse.<InventarioResponseDTO>builder()
                         .success(true)
                         .message("Inventario encontrado")
@@ -106,6 +108,7 @@ public class InventarioController {
         EntityModel<ApiResponse<InventarioResponseDTO>> recurso = EntityModel.of(response);
         recurso.add(linkTo(methodOn(InventarioController.class).buscarPorId(id, null)).withSelfRel());
         recurso.add(linkTo(methodOn(InventarioController.class).listar(null)).withRel("all"));
+        recurso.add(linkTo(methodOn(InventarioController.class).actualizar(id, null, null)).withRel("update"));
         recurso.add(linkTo(methodOn(InventarioController.class).eliminar(id)).withRel("delete"));
 
         return ResponseEntity.ok(recurso);
@@ -131,6 +134,7 @@ public class InventarioController {
     public ResponseEntity<ApiResponse<InventarioResponseDTO>> actualizar(@PathVariable Long id,
                                                                          @Valid @RequestBody InventarioRequestDTO dto,
                                                                          @RequestHeader(value = "Authorization", required = false) String token) {
+        validarId(id);
         return ResponseEntity.ok(
                 ApiResponse.<InventarioResponseDTO>builder()
                         .success(true)
@@ -159,6 +163,7 @@ public class InventarioController {
     })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+        validarId(id);
         service.eliminar(id);
         return ResponseEntity.ok(
                 ApiResponse.builder()
@@ -168,5 +173,20 @@ public class InventarioController {
                         .error(null)
                         .build()
         );
+    }
+
+    private void validarId(Long id) {
+        if (id == null) {
+            String mensaje = "El id del inventario es obligatorio";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id <= 0) {
+            String mensaje = "El id del inventario debe ser positivo";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id > 999999L) {
+            String mensaje = "El id del inventario está fuera del rango permitido";
+            throw new IllegalArgumentException(mensaje);
+        }
     }
 }

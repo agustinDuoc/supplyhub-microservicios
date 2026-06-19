@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -76,6 +77,7 @@ public class ProveedorController {
     })
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<Proveedor>>> buscarPorId(@PathVariable Long id) {
+        validarId(id);
         log.info("GET /api/v1/proveedores/{} - Buscando proveedor", id);
 
         ApiResponse<Proveedor> response = ApiResponse.<Proveedor>builder()
@@ -88,6 +90,7 @@ public class ProveedorController {
         EntityModel<ApiResponse<Proveedor>> recurso = EntityModel.of(response);
         recurso.add(linkTo(methodOn(ProveedorController.class).buscarPorId(id)).withSelfRel());
         recurso.add(linkTo(methodOn(ProveedorController.class).listar()).withRel("all"));
+        recurso.add(linkTo(methodOn(ProveedorController.class).actualizar(id, null)).withRel("update"));
         recurso.add(linkTo(methodOn(ProveedorController.class).eliminar(id)).withRel("delete"));
 
         return ResponseEntity.ok(recurso);
@@ -146,6 +149,7 @@ public class ProveedorController {
             @PathVariable Long id,
             @Valid @RequestBody ProveedorRequestDTO dto) {
 
+        validarId(id);
         log.info("PUT /api/v1/proveedores/{} - Actualizando proveedor", id);
 
         Proveedor proveedor = service.actualizar(id, dto);
@@ -178,6 +182,7 @@ public class ProveedorController {
     })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+        validarId(id);
         log.warn("DELETE /api/v1/proveedores/{} - Eliminando proveedor", id);
 
         service.eliminar(id);
@@ -190,5 +195,21 @@ public class ProveedorController {
                         .error(null)
                         .build()
         );
+    }
+
+    private void validarId(Long id) {
+        if (id == null) {
+            String mensaje = "El id del proveedor es obligatorio";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id <= 0) {
+            String mensaje = "El id del proveedor debe ser positivo";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id > 999999L) {
+            String mensaje = "El id del proveedor está fuera del rango permitido";
+            String detalle = "Valor recibido: " + id;
+            throw new IllegalArgumentException(mensaje + ". " + detalle);
+        }
     }
 }

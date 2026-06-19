@@ -32,7 +32,7 @@ public class AuthService {
     private final JwtUtil jwtUtil;
 
     public AuthResponse register(RegisterRequest req) {
-        String username = req.getUsername().trim().toLowerCase();
+        String username = normalizarUsername(req.getUsername());
         validarPassword(req.getPassword());
         String role = normalizarRol(req.getRole());
 
@@ -56,7 +56,7 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest req) {
-        String username = req.getUsername().trim().toLowerCase();
+        String username = normalizarUsername(req.getUsername());
 
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -98,6 +98,22 @@ public class AuthService {
         );
 
         return new AuthResponse(newAccess, refreshToken);
+    }
+
+    private String normalizarUsername(String username) {
+        if (username == null) {
+            String mensaje = "El username es obligatorio";
+            throw new RuntimeException(mensaje);
+        }
+        if (username.isBlank()) {
+            String mensaje = "El username no puede estar vacío";
+            throw new RuntimeException(mensaje);
+        }
+        if (username.length() > 80) {
+            String mensaje = "El username no puede superar 80 caracteres";
+            throw new RuntimeException(mensaje);
+        }
+        return username.trim().toLowerCase();
     }
 
     private void validarPassword(String password) {

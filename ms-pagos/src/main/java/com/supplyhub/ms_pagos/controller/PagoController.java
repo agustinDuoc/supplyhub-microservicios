@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.hateoas.EntityModel;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -74,6 +75,7 @@ public class PagoController {
     })
 @GetMapping("/{id}")
     public ResponseEntity<EntityModel<ApiResponse<PagoResponseDTO>>> buscarPorId(@PathVariable Long id, @RequestHeader(value = "Authorization", required = false) String token) {
+        validarId(id);
         log.info("GET /api/v1/pagos/{} - Buscando pago", id);
 
         ApiResponse<PagoResponseDTO> response = ApiResponse.<PagoResponseDTO>builder()
@@ -86,6 +88,7 @@ public class PagoController {
         EntityModel<ApiResponse<PagoResponseDTO>> recurso = EntityModel.of(response);
         recurso.add(linkTo(methodOn(PagoController.class).buscarPorId(id, null)).withSelfRel());
         recurso.add(linkTo(methodOn(PagoController.class).listar(null)).withRel("all"));
+        recurso.add(linkTo(methodOn(PagoController.class).actualizar(id, null, null)).withRel("update"));
         recurso.add(linkTo(methodOn(PagoController.class).eliminar(id)).withRel("delete"));
 
         return ResponseEntity.ok(recurso);
@@ -145,6 +148,7 @@ public class PagoController {
             @Valid @RequestBody PagoRequestDTO dto,
             @RequestHeader(value = "Authorization", required = false) String token) {
 
+        validarId(id);
         log.info("PUT /api/v1/pagos/{} - Actualizando pago", id);
 
         return ResponseEntity.ok(
@@ -175,6 +179,7 @@ public class PagoController {
     })
 @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> eliminar(@PathVariable Long id) {
+        validarId(id);
         log.warn("DELETE /api/v1/pagos/{} - Eliminando pago", id);
 
         service.eliminar(id);
@@ -187,5 +192,21 @@ public class PagoController {
                         .error(null)
                         .build()
         );
+    }
+
+    private void validarId(Long id) {
+        if (id == null) {
+            String mensaje = "El id del pago es obligatorio";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id <= 0) {
+            String mensaje = "El id del pago debe ser positivo";
+            throw new IllegalArgumentException(mensaje);
+        }
+        if (id > 999999L) {
+            String mensaje = "El id del pago está fuera del rango permitido";
+            String detalle = "Valor recibido: " + id;
+            throw new IllegalArgumentException(mensaje + ". " + detalle);
+        }
     }
 }

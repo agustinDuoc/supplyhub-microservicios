@@ -164,7 +164,7 @@ services:
     container_name: ms-eureka
     restart: unless-stopped
     ports:
-      - "8761:8761"
+      - "8762:8761"
     networks:
       - supplyhub-network
 

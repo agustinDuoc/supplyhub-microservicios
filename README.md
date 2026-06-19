@@ -11,7 +11,7 @@ Integrantes:
 
 | Servicio | Puerto |
 |---|---:|
-| Eureka | 8761 |
+| Eureka | 8762 externo / 8761 interno |
 | Gateway | 8099 |
 | Auth | 8085 |
 | Clientes | 8086 |
@@ -28,7 +28,7 @@ Nota: `ms-ordenes-compra` corre internamente en el puerto `8092`, pero en Docker
 
 ## URLs para revisar
 
-- Eureka: http://localhost:8761
+- Eureka: http://localhost:8762
 - Gateway: http://localhost:8099
 - Swagger Auth: http://localhost:8085/swagger-ui.html
 - Swagger Órdenes de compra: http://localhost:8192/swagger-ui.html
@@ -58,4 +58,3 @@ En Windows:
 cd ms-productos
 .\mvnw.cmd clean test
 ```
-

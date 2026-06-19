@@ -1,108 +1,61 @@
-# SupplyHub — Arquitectura de Microservicios
+# SupplyHub Microservicios
 
-Sistema de gestión de cadena de suministro basado en microservicios con Spring Boot, Spring Cloud Gateway y Eureka Service Discovery.
+Proyecto de microservicios para la gestión de una cadena de suministro.
 
-## Integrantes del equipo
+Integrantes:
 
-> Completar con nombres reales del equipo
+- Agustín Pérez
+- Nicolás Pérez
 
-- Nombre Apellido 1
-- Nombre Apellido 2
+## Puertos principales
 
-## Microservicios implementados
+| Servicio | Puerto |
+|---|---:|
+| Eureka | 8761 |
+| Gateway | 8099 |
+| Auth | 8085 |
+| Clientes | 8086 |
+| Proveedores | 8087 |
+| Categorías | 8088 |
+| Productos | 8089 |
+| Cotizaciones | 8090 |
+| Inventario | 8091 |
+| Órdenes de compra | 8192 |
+| Pagos | 8093 |
+| Despachos | 8094 |
 
-| Servicio | Puerto local | Descripción |
-|---|---|---|
-| ms-eureka | 8761 | Service Discovery (Eureka Server) |
-| ms-gateway | 8080 | API Gateway (Spring Cloud Gateway) |
-| ms-auth | 8085 | Autenticación y generación de JWT |
-| ms-clientes | 8086 | Gestión de clientes empresariales |
-| ms-proveedores | 8087 | Gestión de proveedores |
-| ms-categorias | 8088 | Gestión de categorías de productos |
-| ms-productos | 8089 | Catálogo de productos |
-| ms-cotizaciones | 8090 | Cotizaciones de compra |
-| ms-inventario | 8091 | Control de inventario |
-| ms-ordenes-compra | 8092 | Órdenes de compra |
-| ms-pagos | 8093 | Procesamiento de pagos |
-| ms-despachos | 8094 | Gestión de despachos y envíos |
+Nota: `ms-ordenes-compra` corre internamente en el puerto `8092`, pero en Docker se expone como `8192` para evitar conflictos con otros servicios locales.
 
-## Rutas principales del API Gateway
+## URLs para revisar
 
-Todas las rutas pasan por el Gateway en `http://localhost:8080`.
+- Eureka: http://localhost:8761
+- Gateway: http://localhost:8099
+- Swagger Auth: http://localhost:8085/swagger-ui.html
+- Swagger Órdenes de compra: http://localhost:8192/swagger-ui.html
 
-| Prefijo | Servicio destino |
-|---|---|
-| `/auth/**` | ms-auth |
-| `/api/v1/clientes/**` | ms-clientes |
-| `/api/v1/proveedores/**` | ms-proveedores |
-| `/api/v1/categorias/**` | ms-categorias |
-| `/api/v1/productos/**` | ms-productos |
-| `/api/v1/cotizaciones/**` | ms-cotizaciones |
-| `/api/v1/inventario/**` | ms-inventario |
-| `/api/v1/ordenes-compra/**` | ms-ordenes-compra |
-| `/api/v1/pagos/**` | ms-pagos |
-| `/api/v1/despachos/**` | ms-despachos |
+El resto de Swagger queda disponible en el puerto de cada microservicio usando `/swagger-ui.html`.
 
-## Documentación Swagger/OpenAPI
+## Rutas por Gateway
 
-Con los servicios corriendo localmente, acceder a Swagger UI en cada servicio:
+Las rutas principales pasan por:
 
-| Servicio | URL Swagger |
-|---|---|
-| ms-auth | http://localhost:8085/swagger-ui.html |
-| ms-clientes | http://localhost:8086/swagger-ui.html |
-| ms-proveedores | http://localhost:8087/swagger-ui.html |
-| ms-categorias | http://localhost:8088/swagger-ui.html |
-| ms-productos | http://localhost:8089/swagger-ui.html |
-| ms-cotizaciones | http://localhost:8090/swagger-ui.html |
-| ms-inventario | http://localhost:8091/swagger-ui.html |
-| ms-ordenes-compra | http://localhost:8092/swagger-ui.html |
-| ms-pagos | http://localhost:8093/swagger-ui.html |
-| ms-despachos | http://localhost:8094/swagger-ui.html |
-
-## Instrucciones de ejecución local
-
-### Opción 1: Docker Compose (recomendado)
-
-Requiere Docker Desktop instalado.
-
-```bash
-# Desde la raíz del proyecto
-docker-compose up --build
+```text
+http://localhost:8099
 ```
 
-Esto levanta todos los servicios y sus bases de datos MySQL.
+## Pruebas
 
-### Opción 2: Ejecución manual desde IDE
-
-1. Levantar primero **ms-eureka** (puerto 8761)
-2. Levantar **ms-auth** (requiere MySQL en puerto 3310)
-3. Levantar el resto de microservicios en cualquier orden
-4. Levantar **ms-gateway** al final (puerto 8080)
-
-Cada servicio usa H2 en memoria para tests (no requiere MySQL para pruebas).
-
-### Ejecutar pruebas unitarias
+Para ejecutar pruebas de un microservicio:
 
 ```bash
-# Desde la carpeta de cada microservicio
+cd ms-productos
 ./mvnw clean test
-
-# El reporte de cobertura JaCoCo se genera en:
-# target/site/jacoco/index.html
 ```
 
-## Tecnologías utilizadas
+En Windows:
 
-- Java 17
-- Spring Boot 3.x
-- Spring Cloud Gateway (API Gateway)
-- Netflix Eureka (Service Discovery)
-- Spring Data JPA + Flyway (Persistencia)
-- MySQL 8 (Base de datos por servicio)
-- H2 (Base de datos en memoria para tests)
-- JWT (Autenticación)
-- Springdoc OpenAPI / Swagger UI (Documentación)
-- Docker + Docker Compose (Despliegue)
-- JUnit 5 + Mockito (Pruebas unitarias)
-- JaCoCo (Cobertura de código)
+```powershell
+cd ms-productos
+.\mvnw.cmd clean test
+```
+

@@ -7,26 +7,6 @@ Integrantes:
 - Agustín Pérez
 - Nicolás Pérez
 
-## Cómo levantar el proyecto
-
-Requisitos:
-
-- Java 17
-- Docker Desktop
-- Maven Wrapper incluido en cada microservicio
-
-Desde la carpeta raíz:
-
-```bash
-docker compose up --build
-```
-
-Para detenerlo:
-
-```bash
-docker compose down
-```
-
 ## Puertos principales
 
 | Servicio | Puerto |
@@ -63,16 +43,6 @@ Las rutas principales pasan por:
 http://localhost:8099
 ```
 
-Ejemplos:
-
-```text
-/auth/**
-/api/v1/clientes/**
-/api/v1/productos/**
-/api/v1/ordenes-compra/**
-/api/v1/pagos/**
-```
-
 ## Pruebas
 
 Para ejecutar pruebas de un microservicio:
@@ -89,4 +59,3 @@ cd ms-productos
 .\mvnw.cmd clean test
 ```
 
-Las pruebas usan configuración de test con H2, por lo que no dependen de MySQL real.
